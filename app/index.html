@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compteurs d'eau RCG 07-031</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="entete">
+    <div class="entete-ligne">
+      <div>
+        <h1>Sélection de compteurs d'eau</h1>
+        <p class="sous-titre">RCG 07-031 — codification administrative au 23 décembre 2025 · <span id="titre-projet"></span></p>
+      </div>
+      <div class="barre-outils">
+        <button class="btn btn-sec" data-action="exemple">Charger l'exemple</button>
+        <button class="btn btn-sec" data-action="nouveau">Nouveau projet</button>
+        <button class="btn btn-sec" data-action="exporter">Exporter (JSON)</button>
+        <button class="btn btn-sec" data-action="importer">Importer</button>
+        <input type="file" id="fichier-import" accept="application/json,.json" hidden>
+      </div>
+    </div>
+    <p class="avertissement" role="note">Outil d'aide à la décision — la détermination du type et de la dimension du compteur revient à l'autorité compétente (art. 9, RCG 07-031). La conformité finale doit être validée par un professionnel contre le texte officiel.</p>
+    <nav id="nav" class="nav" aria-label="Modules"></nav>
+  </header>
+  <main id="contenu"></main>
+  <div id="infobulle" class="infobulle" role="tooltip" hidden></div>
+
+  <script src="js/reglement.js"></script>
+  <script src="js/calculs.js"></script>
+  <script src="js/exemple.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -284,7 +284,7 @@ Paramètres : **demande de pointe de référence QPM = 2,3 m³/h (10 gal US)** ;
 
 6. **QPUS = Q13 + Q12P** (USGPM) ; **QPM = QPUS × 0,227** (m³/h).
 
-Contrôle de continuité (calculé, non tiré du PDF) : cas 1 — Q12 = 45 → 44,26 ; 1 250 → 136,02 / 134,58 ; 13 000 → 218,30 / 221,00. Cas 2 — 25 → 18,00 / 18,05 ; 1 250 → 62,81 / 64,92. Les sauts aux bornes sont faibles : la transcription des exposants est cohérente.
+Contrôle de continuité (calculé, non tiré du PDF) : cas 1 — Q12 = 45 → 44,26 (cas 1, < 45 : 45) ; 1 250 → 136,02 / 134,58 ; 13 000 → 218,30 / 221,00. Cas 2 — 25 → 18,00 / 18,04 ; 1 250 → 62,81 / 64,92. Les sauts aux bornes sont faibles : la transcription des exposants est cohérente.
 
 ---
 
