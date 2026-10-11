@@ -227,8 +227,35 @@
     return { evaluations: liste, propositions: propositions };
   }
 
+  // Bilan de pression — CNP 2020 (CCQ ch. III), note A-2.6.3.1. 2), méthode de la perte de pression moyenne,
+  // figure A-2.6.3.1. 2)-B. Pressions en kPa, longueur en m.
+  var KPA_PAR_M_EAU = 9.81; // poids volumique de l'eau : conversion physique, non tirée du CNP
+  var SEUIL_KPA_M = 2.6;    // pression disponible minimale pour les pertes de charge (note A-2.6.3.1. 2))
+  function bilanPression(e) {
+    var n = function (v) { var x = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isFinite(x) ? x : 0; };
+    var pStat = n(e.pStatique), facteur = n(e.facteur) || 1.5;
+    var pAjustee = pStat - n(e.perteBranchement);
+    var hauteurKpa = n(e.hauteurM) * KPA_PAR_M_EAU;
+    var pertesDispositifs = n(e.perteCompteur) + n(e.autresPertes);
+    var pDispo = pAjustee - (pertesDispositifs + hauteurKpa + n(e.pressionMin));
+    var lEq = n(e.longueur) * facteur;
+    var parMetre = lEq > 0 ? pDispo / lEq : null;
+    // Perte maximale du compteur pour conserver 2,6 kPa/m : sert de critère au module 3.
+    var requiseAvalCompteur = n(e.autresPertes) + hauteurKpa + n(e.pressionMin) + SEUIL_KPA_M * lEq;
+    return {
+      pAjustee: pAjustee, hauteurKpa: hauteurKpa, pertesDispositifs: pertesDispositifs, pDispo: pDispo,
+      longueurEquivalente: lEq, kpaParMetre: parMetre,
+      methodeApplicable: parMetre != null ? parMetre >= SEUIL_KPA_M : null,
+      reducteurRequis: pStat > 550,
+      requiseAvalCompteur: requiseAvalCompteur,
+      perteCompteurMax: pAjustee - requiseAvalCompteur
+    };
+  }
+
   var api = {
     perteA: perteA,
+    bilanPression: bilanPression,
+    SEUIL_KPA_M: SEUIL_KPA_M,
     evaluerCompteur: evaluerCompteur,
     selectionnerCompteurs: selectionnerCompteurs,
     nombre: nombre,

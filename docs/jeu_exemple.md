@@ -45,6 +45,10 @@ Demande : QPUS = 20,23288 USGPM (module 2). Pressions **fictives** : disponible 
 
 Variante : 600 gpm saisis → T-10 2" et MACH 10 3" écartés (plage) ; MACH 10 4" proposé sous réserve.
 
+### Bilan de pression (CNP 2020, fig. A-2.6.3.1. 2)-B) — valeurs fictives
+
+565 kPa − 25 = **540 kPa** ; compteur proposé iPERL 3/4 (20,38 kPa) + autres dispositifs 15 + hauteur 3,5 m × 9,81 = 34,3 + robinet 105 → disponible **365,3 kPa** ; ÷ (76 m × 1,5 = 114 m) = **3,2 kPa/m ≥ 2,6** ; perte maximale du compteur **89,3 kPa** ; alerte réducteur (565 > 550 kPa, CNP 2.6.3.3.).
+
 ## Module 4 — nombre et emplacement
 
 | Branchement | Résultat | Réf. |

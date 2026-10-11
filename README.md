@@ -18,7 +18,7 @@ enregistré dans le navigateur et peut être exporté ou importé en JSON.
 |---|---|
 | 1. Admissibilité (art. 2.1) | ✅ |
 | 2. Demande de pointe (annexes H et I) | ✅ |
-| 3. Sélection du compteur (art. 9) | ✅ base : Neptune T-10, Sensus iPERL, Neptune MACH 10 (perte MACH 10 manquante) |
+| 3. Sélection du compteur (art. 9) | ✅ base : Neptune T-10, Sensus iPERL, Neptune MACH 10 (perte MACH 10 manquante) ; bilan de pression CNP 2020 |
 | 4. Nombre et emplacement (art. 3, 4, 8, 8.01) | ✅ |
 | 5. Chambre de compteur (art. 5 à 7, 8.1, annexe B) | ✅ |
 | 6. Préparation et installation (art. 9, 11, 12, annexes B, E, G) | ✅ |
@@ -30,6 +30,7 @@ enregistré dans le navigateur et peut être exporté ou importé en JSON.
 - `docs/jeu_exemple.md` — jeu d'exemple et résultats attendus.
 - `docs/donnees_compteurs.md` — données compteurs, sources et lectures graphiques.
 - `docs/fiches/` — fiches fabricants fournies.
+- `docs/extraction_CNP_2020.md` — bilan de pression selon le CNP 2020 (note A-2.6.3.1. 2)).
 
 ## Tests
 

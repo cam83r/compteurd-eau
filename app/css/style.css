@@ -208,3 +208,4 @@ tr.propose td { background: var(--ok-fond); }
 .liste-controle .case { flex: 0 0 auto; width: 12px; height: 12px; border: 1.5px solid var(--texte-doux); border-radius: 2px; transform: translateY(1px); }
 h2 small.aide { font-weight: 400; }
 .colonnes > div > .resultat:not(.carte) { position: static; }
+.ref-cnp { background: var(--ok-fond); color: var(--ok); }

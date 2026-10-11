@@ -132,6 +132,25 @@ test('600 gpm : T-10 2 po et MACH 10 3 po écartés, MACH 10 4 po proposé', fun
   assert.ok(!s.propositions.volumetrique);
 });
 
+console.log('Bilan de pression — CNP 2020, figure A-2.6.3.1. 2)-B');
+test('Exemple du CNP : 565 − 25 = 540 ; 540 − (20 + 35 + 105) = 380 ; 380 / 114 = 3,33 kPa/m', function () {
+  var r = C.bilanPression({ pStatique: 565, perteBranchement: 25, perteCompteur: 20, autresPertes: 0, hauteurM: 35 / 9.81, pressionMin: 105, longueur: 76, facteur: 1.5 });
+  proche(r.pAjustee, 540); proche(r.pDispo, 380); proche(r.longueurEquivalente, 114); proche(r.kpaParMetre, 380 / 114); assert.ok(r.methodeApplicable); assert.ok(r.reducteurRequis);
+});
+test('Perte maximale du compteur pour 2,6 kPa/m : 540 − (35 + 105 + 2,6 × 114) = 103,6 kPa', function () {
+  var r = C.bilanPression({ pStatique: 565, perteBranchement: 25, autresPertes: 0, hauteurM: 35 / 9.81, pressionMin: 105, longueur: 76 });
+  proche(r.perteCompteurMax, 103.6, 1e-9);
+});
+test('Sous 2,6 kPa/m → méthode détaillée requise', function () {
+  var r = C.bilanPression({ pStatique: 300, perteBranchement: 0, perteCompteur: 30, autresPertes: 70, hauteurM: 10, pressionMin: 100, longueur: 50 });
+  assert.strictEqual(r.methodeApplicable, false); assert.ok(!r.reducteurRequis);
+});
+test('Jeu d\'exemple : T-10 1 po (11,63 kPa) → 3,28 kPa/m', function () {
+  var perte = C.perteA(cpt('T_10_1'), q).kpa;
+  var r = C.bilanPression({ pStatique: 565, perteBranchement: 25, perteCompteur: perte, autresPertes: 15, hauteurM: 3.5, pressionMin: 105, longueur: 76, facteur: 1.5 });
+  proche(r.pDispo, 540 - (perte + 15 + 3.5 * 9.81 + 105)); assert.ok(r.kpaParMetre > 3.28 && r.kpaParMetre < 3.29);
+});
+
 console.log('Modules 4 à 7 — branchements');
 var B = require('../app/js/branchements.js');
 var b1 = EXEMPLE.branchements[0], b2 = EXEMPLE.branchements[1];

@@ -42,6 +42,11 @@
       pressionRequiseKpa: 350,
       technologie: ''
     },
+    // Bilan de pression (CNP 2020) — valeurs FICTIVES inspirées de l'exemple de la figure A-2.6.3.1. 2)-B.
+    bilan: {
+      pStatique: 565, perteBranchement: 25, compteurId: '', perteCompteurManuelle: '', autresPertes: 15,
+      hauteurM: 3.5, pressionMin: 105, longueur: 76, facteur: 1.5
+    },
     // Modules 4 à 7.
     immeuble: { reseauPrive: 'non', codeUsageG: '' },
     branchements: [

@@ -210,6 +210,7 @@ tr.propose td { background: var(--ok-fond); }
 .liste-controle .case { flex: 0 0 auto; width: 12px; height: 12px; border: 1.5px solid var(--texte-doux); border-radius: 2px; transform: translateY(1px); }
 h2 small.aide { font-weight: 400; }
 .colonnes > div > .resultat:not(.carte) { position: static; }
+.ref-cnp { background: var(--ok-fond); color: var(--ok); }
 </style>
 <header class="entete">
     <div class="entete-ligne">
@@ -490,6 +491,11 @@ h2 small.aide { font-weight: 400; }
     annD_17: { court: 'ann. D, § 1.7', texte: "Point d'installation : endroit sur la conduite d'eau où le compteur sera installé. Le compteur ne doit mesurer que la consommation d'eau potable I.C.I., et non la consommation résidentielle ou l'eau de protection incendie." },
     annE: { court: 'ann. E', texte: 'Annexe E — Fiche auto-inspection (révision 7), transmise à l\'autorité compétente une fois les travaux terminés (art. 9 al. 1).' },
     annG: { court: 'ann. G', texte: 'Annexe G — Types d\'usage autorisés pour une voie de dérivation (révision 2).' },
+    cnp_2631: { source: 'CNP 2020 (CCQ, chapitre III)', court: 'CNP 2.6.3.1.', texte: "1) Les réseaux de distribution d'eau doivent être conçus de façon à assurer le débit de pointe lorsque la pression aux tuyaux d'alimentation en eau est conforme aux spécifications du fabricant de la robinetterie sanitaire. 2) La conception, la fabrication et l'installation des réseaux d'alimentation en eau potable doivent être conformes aux règles comme celles décrites dans les manuels de l'ASHRAE et de l'ASPE." },
+    cnp_2633: { source: 'CNP 2020 (CCQ, chapitre III)', court: 'CNP 2.6.3.3.', texte: "Pour tout appareil sanitaire où la pression statique peut dépasser 550 kPa, il faut installer un réducteur de pression pour y limiter la pression statique à 550 kPa." },
+    cnp_2635: { source: 'CNP 2020 (CCQ, chapitre III)', court: 'CNP 2.6.3.5.', texte: "Les vitesses maximales de l'eau doivent respecter les recommandations du fabricant des tuyaux et raccords sans jamais dépasser 3,0 m/s." },
+    cnp_A2631: { source: 'CNP 2020 (CCQ, chapitre III)', court: 'CNP A-2.6.3.1. 2)', texte: "Méthode de calcul de la perte de pression moyenne : pression statique minimale à la limite de propriété, moins les pertes du branchement d'eau général = pression ajustée au point d'entrée ; moins les pertes des compteurs, réducteurs de pression, dispositifs antirefoulement et autres dispositifs, les pertes ou gains dus à la hauteur et la pression de service minimale du robinet le plus éloigné = pression disponible pour les pertes de charge ; divisée par la longueur développée × 1,5 (raccords) : au moins 2,6 kPa par mètre, sinon le réseau doit être calculé selon une méthode détaillée de conception technique (figure A-2.6.3.1. 2)-B)." },
+    cnp_A2631_ex: { source: 'CNP 2020 (CCQ, chapitre III)', court: 'CNP fig. A-2.6.3.1. 2)-B', texte: "Exemple du CNP : 565 kPa − 25 kPa = 540 kPa ; 540 − (20 compteur, RP, DA + 35 hauteur + 105 pression minimale de l'appareil) = 380 kPa ; 380 kPa ÷ 114 m (76 m × 1,5) = 3,3 kPa par mètre." },
     annD: { court: 'ann. D', texte: 'Annexe D — Questionnaire : fiche d\'information (révision 6).' },
     annD_13: { court: 'ann. D, § 1.3', texte: 'Annexe D, § 1.3 — Usages du bâtiment : vocation I.C.I. (industrielle, commerciale, institutionnelle) ; nombre d\'unités de logement ; salle de spectacle, théâtre, cinéma, école, stade, centre sportif, aréna, hôtel ou motel.' }
   };
@@ -809,8 +815,35 @@ h2 small.aide { font-weight: 400; }
     return { evaluations: liste, propositions: propositions };
   }
 
+  // Bilan de pression — CNP 2020 (CCQ ch. III), note A-2.6.3.1. 2), méthode de la perte de pression moyenne,
+  // figure A-2.6.3.1. 2)-B. Pressions en kPa, longueur en m.
+  var KPA_PAR_M_EAU = 9.81; // poids volumique de l'eau : conversion physique, non tirée du CNP
+  var SEUIL_KPA_M = 2.6;    // pression disponible minimale pour les pertes de charge (note A-2.6.3.1. 2))
+  function bilanPression(e) {
+    var n = function (v) { var x = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isFinite(x) ? x : 0; };
+    var pStat = n(e.pStatique), facteur = n(e.facteur) || 1.5;
+    var pAjustee = pStat - n(e.perteBranchement);
+    var hauteurKpa = n(e.hauteurM) * KPA_PAR_M_EAU;
+    var pertesDispositifs = n(e.perteCompteur) + n(e.autresPertes);
+    var pDispo = pAjustee - (pertesDispositifs + hauteurKpa + n(e.pressionMin));
+    var lEq = n(e.longueur) * facteur;
+    var parMetre = lEq > 0 ? pDispo / lEq : null;
+    // Perte maximale du compteur pour conserver 2,6 kPa/m : sert de critère au module 3.
+    var requiseAvalCompteur = n(e.autresPertes) + hauteurKpa + n(e.pressionMin) + SEUIL_KPA_M * lEq;
+    return {
+      pAjustee: pAjustee, hauteurKpa: hauteurKpa, pertesDispositifs: pertesDispositifs, pDispo: pDispo,
+      longueurEquivalente: lEq, kpaParMetre: parMetre,
+      methodeApplicable: parMetre != null ? parMetre >= SEUIL_KPA_M : null,
+      reducteurRequis: pStat > 550,
+      requiseAvalCompteur: requiseAvalCompteur,
+      perteCompteurMax: pAjustee - requiseAvalCompteur
+    };
+  }
+
   var api = {
     perteA: perteA,
+    bilanPression: bilanPression,
+    SEUIL_KPA_M: SEUIL_KPA_M,
     evaluerCompteur: evaluerCompteur,
     selectionnerCompteurs: selectionnerCompteurs,
     nombre: nombre,
@@ -1073,6 +1106,11 @@ h2 small.aide { font-weight: 400; }
       pressionRequiseKpa: 350,
       technologie: ''
     },
+    // Bilan de pression (CNP 2020) — valeurs FICTIVES inspirées de l'exemple de la figure A-2.6.3.1. 2)-B.
+    bilan: {
+      pStatique: 565, perteBranchement: 25, compteurId: '', perteCompteurManuelle: '', autresPertes: 15,
+      hauteurM: 3.5, pressionMin: 105, longueur: 76, facteur: 1.5
+    },
     // Modules 4 à 7.
     immeuble: { reseauPrive: 'non', codeUsageG: '' },
     branchements: [
@@ -1124,8 +1162,13 @@ h2 small.aide { font-weight: 400; }
       immeuble: { reseauPrive: '', codeUsageG: '' },
       branchements: [branchementVide(1)],
       consommation: { diametreMm: '', jours: '', tarif: '' },
-      autoInspection: {}
+      autoInspection: {},
+      bilan: bilanVide()
     };
+  }
+
+  function bilanVide() {
+    return { pStatique: '', perteBranchement: '', compteurId: '', perteCompteurManuelle: '', autresPertes: '', hauteurM: '', pressionMin: '', longueur: '', facteur: '1.5' };
   }
 
   function branchementVide(n) {
@@ -1143,6 +1186,7 @@ h2 small.aide { font-weight: 400; }
     if (!Array.isArray(o.branchements) || !o.branchements.length || o.branchements[0].neuf === undefined) o.branchements = [branchementVide(1)];
     if (!o.consommation) o.consommation = { diametreMm: '', jours: '', tarif: '' };
     if (!o.autoInspection) o.autoInspection = {};
+    if (!o.bilan) o.bilan = bilanVide();
     return o;
   }
 
@@ -1175,7 +1219,7 @@ h2 small.aide { font-weight: 400; }
   // Citation normative affichée en infobulle (exigence : chaque résultat cite son article/annexe).
   function ref(cle) {
     var r = RCG.REFS[cle];
-    return '<span class="ref" tabindex="0" data-tip="' + esc('RCG 07-031 — ' + r.court + ' : ' + r.texte) + '">' + esc(r.court) + '</span>';
+    return '<span class="ref' + (r.source ? ' ref-cnp' : '') + '" tabindex="0" data-tip="' + esc((r.source || 'RCG 07-031') + ' — ' + r.court + ' : ' + r.texte) + '">' + esc(r.court) + '</span>';
   }
   function aConfirmer(texte) {
     return '<span class="badge badge-warn" title="' + esc(texte) + '">à confirmer</span>';
@@ -1419,6 +1463,7 @@ h2 small.aide { font-weight: 400; }
       TECHNOS.map(function (t) { return '<option value="' + t[0] + '"' + (s.technologie === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') +
       '</select></label><p class="aide">Base : fiches Neptune T-10, Sensus iPERL et Neptune MACH 10 fournies par l\'usager (docs/fiches). Pertes de pression lues sur les graphiques des fiches (≈ ±0,2 psi) ; MACH 10 : aucune donnée de perte dans la source.</p></section>' +
       '</div><div><section class="carte resultat" id="m3-resultat" aria-live="polite"></section></div></div>' +
+      vueBilan() +
       '<section class="carte" id="m3-graphique"></section>' +
       '<section class="carte" id="m3-tableau"></section>' +
       '<section class="carte"><h2>Dossier de contestation du dimensionnement ' + ref('art9_al4') + '</h2>' +
@@ -1460,6 +1505,7 @@ h2 small.aide { font-weight: 400; }
   function majModule3(d) {
     var el = document.getElementById('m3-resultat');
     if (!el) return;
+    majBilan(d);
     var dem = demandeSelection(d), q = dem.q, permise = pertePermise();
     document.getElementById('m3-demande').innerHTML = dem.origine === 'module2'
       ? 'QPUS = <strong>' + fmt(q, 3) + ' USGPM</strong> (QPM = ' + fmt(d.qpm, 3) + ' m³/h) ' + ref('annI_qpm')
@@ -1541,6 +1587,88 @@ h2 small.aide { font-weight: 400; }
       (permise != null ? '<li><span class="trait limite"></span>Perte admissible ' + fmt(permise / CompteursDB.KPA_PAR_PSI, 2) + ' psi</li>' : '') + '</ul>';
     return '<h2>Courbes de perte de pression ' + ref('art9_al3') + '</h2>' + svg + legende +
       '<p class="aide">Courbes reconstituées à partir des points lus sur les graphiques des fiches fabricants (≈ ±0,2 psi) — à confirmer.</p>';
+  }
+
+
+  // ---------- bilan de pression (CNP 2020, note A-2.6.3.1. 2)) ----------
+  function vueBilan() {
+    var b = etat.bilan;
+    function champ(cle, libelle, unite) {
+      return '<label class="champ">' + esc(libelle) + ' (' + unite + ')<input type="number" step="any" data-champ="bilan.' + cle + '" value="' + esc(b[cle]) + '"></label>';
+    }
+    var options = [['', 'Proposition du module 3 (première dont la perte est connue)']]
+      .concat(CompteursDB.COMPTEURS.filter(function (c) { return c.perte; }).map(function (c) { return [c.id, nomCpt(c)]; }))
+      .concat([['manuel', 'Saisie manuelle']]);
+    return '<section class="carte" id="bilan"><h2>Bilan de pression ' + ref('cnp_A2631') + ' ' + ref('cnp_2631') + '</h2>' +
+      '<p class="aide">Méthode de la perte de pression moyenne du CNP 2020 (Code de construction du Québec, chapitre III). Le CNP ne fixe aucune pression minimale par appareil : elle provient des spécifications du fabricant de la robinetterie ' + ref('cnp_2631') + '. Ce bilan est un outil de préparation ; le calcul hydraulique visé à l\'article 9 al. 4 doit être signé par un ingénieur ' + ref('art9_al4') + '.</p>' +
+      '<div class="grille">' +
+      champ('pStatique', 'Pression statique minimale à la limite de propriété', 'kPa') +
+      champ('perteBranchement', 'Pertes du branchement d\'eau général', 'kPa') +
+      '<label class="champ">Compteur<select data-champ="bilan.compteurId">' + options.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (b.compteurId === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select></label>' +
+      champ('perteCompteurManuelle', 'Perte du compteur, si saisie manuelle', 'kPa') +
+      champ('autresPertes', 'Réducteur de pression, DAR, traitement, autres dispositifs', 'kPa') +
+      champ('hauteurM', 'Différence de hauteur entrée → robinet le plus éloigné', 'm') +
+      champ('pressionMin', 'Pression de service minimale du robinet le plus éloigné (fabricant)', 'kPa') +
+      champ('longueur', 'Longueur développée entrée → robinet le plus éloigné', 'm') +
+      champ('facteur', 'Facteur de raccords (1,5 si le diamètre intérieur des raccords ≥ DN du tuyau)', '×') +
+      '</div><div id="m3-bilan"></div></section>';
+  }
+
+  function calculerBilan(d) {
+    var b = etat.bilan, perte = null, compteur = null, note = '';
+    var q = demandeSelection(d).q;
+    if (b.compteurId === 'manuel') {
+      perte = Calculs.nombre(b.perteCompteurManuelle);
+      note = 'perte saisie';
+    } else {
+      if (b.compteurId) compteur = CompteursDB.COMPTEURS.filter(function (c) { return c.id === b.compteurId; })[0];
+      else if (q > 0) {
+        var sel = Calculs.selectionnerCompteurs(q, pertePermise(), null);
+        var props = Object.keys(sel.propositions).map(function (k) { return sel.propositions[k]; }).filter(function (r) { return r.perte.statut === 'calculee'; });
+        compteur = props.length ? props[0].compteur : null;
+      }
+      if (compteur && q > 0) {
+        var pa = Calculs.perteA(compteur, q);
+        if (pa.statut === 'calculee') { perte = pa.kpa; note = nomCpt(compteur) + ' à ' + fmt(q, 2) + ' gpm (lecture de fiche)'; }
+        else note = nomCpt(compteur) + ' : perte non disponible à ce débit';
+      }
+    }
+    var bilan = Calculs.bilanPression({
+      pStatique: b.pStatique, perteBranchement: b.perteBranchement, perteCompteur: perte, autresPertes: b.autresPertes,
+      hauteurM: b.hauteurM, pressionMin: b.pressionMin, longueur: b.longueur, facteur: b.facteur
+    });
+    return { bilan: bilan, perteCompteur: perte, note: note };
+  }
+
+  function majBilan(d) {
+    var el = document.getElementById('m3-bilan');
+    if (!el) return;
+    var b = etat.bilan;
+    if (b.pStatique === '' || b.longueur === '') { el.innerHTML = '<p class="aide">Saisir au moins la pression statique minimale et la longueur développée.</p>'; return; }
+    var r = calculerBilan(d), x = r.bilan;
+    var h = '<table class="etapes"><tbody>' +
+      etape('Étape 1c) Pression ajustée au point d\'entrée = ' + fmt(Calculs.nombre(b.pStatique), 1) + ' − ' + fmt(Calculs.nombre(b.perteBranchement), 1), '<strong>' + fmt(x.pAjustee, 1) + ' kPa</strong>', 'cnp_A2631') +
+      etape('Perte du compteur', r.perteCompteur == null ? aConfirmer('Perte du compteur inconnue') + ' non comptée' : fmt(r.perteCompteur, 1) + ' kPa <span class="aide">(' + esc(r.note) + ')</span>', 'art9_al3') +
+      etape('Autres dispositifs (RP, DAR, traitement…)', fmt(Calculs.nombre(b.autresPertes), 1) + ' kPa', 'cnp_A2631') +
+      etape('Hauteur : ' + fmt(Calculs.nombre(b.hauteurM), 2) + ' m × 9,81 kPa/m', fmt(x.hauteurKpa, 1) + ' kPa <span class="aide">(conversion physique)</span>', 'cnp_A2631') +
+      etape('Pression minimale du robinet le plus éloigné', fmt(Calculs.nombre(b.pressionMin), 1) + ' kPa', 'cnp_2631') +
+      etape('Étape 1d) Pression disponible pour les pertes de charge', '<strong>' + fmt(x.pDispo, 1) + ' kPa</strong>', 'cnp_A2631') +
+      etape('Longueur équivalente = ' + fmt(Calculs.nombre(b.longueur), 1) + ' m × ' + fmt(Calculs.nombre(b.facteur) || 1.5, 2), fmt(x.longueurEquivalente, 1) + ' m', 'cnp_A2631') +
+      etape('Étape 1e) Pression disponible par mètre', '<strong>' + (x.kpaParMetre == null ? '—' : fmt(x.kpaParMetre, 2) + ' kPa/m') + '</strong>', 'cnp_A2631_ex') +
+      '</tbody></table>';
+    if (x.methodeApplicable === true) {
+      h += '<div class="statut statut-ok"><strong>≥ 2,6 kPa/m : méthode de la perte de pression moyenne applicable</strong><span>Dimensionner ensuite chaque tronçon avec le tableau A-2.6.3.1. 2)-F (vitesse ≤ 3,0 m/s) ' + ref('cnp_2635') + '.</span></div>';
+    } else if (x.methodeApplicable === false) {
+      h += '<div class="statut statut-err"><strong>< 2,6 kPa/m : calcul selon une méthode détaillée de conception technique requis</strong><span>La pression disponible est insuffisante pour la méthode simplifiée ' + ref('cnp_A2631') + '.</span></div>';
+    }
+    if (x.reducteurRequis) h += '<div class="statut statut-warn"><strong>Pression statique > 550 kPa</strong><span>Réducteur de pression requis pour tout appareil où la pression statique peut dépasser 550 kPa ' + ref('cnp_2633') + '.</span></div>';
+    h += '<h3>Lien avec le critère de perte de pression du compteur</h3>' +
+      '<p>Pour conserver 2,6 kPa/m, le compteur peut perdre au plus <strong>' + fmt(x.perteCompteurMax, 1) + ' kPa</strong> ' +
+      '(pression disponible ' + fmt(x.pAjustee, 1) + ' kPa ; pression requise en aval ' + fmt(x.requiseAvalCompteur, 1) + ' kPa).</p>' +
+      '<button class="btn" data-action="appliquer-bilan">Utiliser ces pressions pour la sélection du compteur</button>';
+    el.innerHTML = h;
   }
 
   // ---------- modules 4 à 7 : branchements ----------
@@ -1976,6 +2104,10 @@ h2 small.aide { font-weight: 400; }
       lien.click();
       URL.revokeObjectURL(lien.href);
       return;
+    } else if (a === 'appliquer-bilan') {
+      var bl = calculerBilan(Calculs.calculerDemandePointe(etat.etablissements)).bilan;
+      etat.selection.pressionDisponibleKpa = Math.round(bl.pAjustee * 10) / 10;
+      etat.selection.pressionRequiseKpa = Math.round(bl.requiseAvalCompteur * 10) / 10;
     } else if (a === 'confirmer') {
       var f = actionEnAttente;
       fermerBandeau();
