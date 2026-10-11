@@ -290,7 +290,7 @@ Contrôle de continuité (calculé, non tiré du PDF) : cas 1 — Q12 = 45 → 4
 
 ## 12. Illisible, manquant ou ambigu
 
-1. ⚠ **`Spec_App_Compteurs_Eau.md` absent du dépôt** (dépôt vide, aucun commit). Les modules 1 → 7 ne peuvent pas être identifiés.
+1. ~~Spec absente~~ — reçue et ajoutée au dépôt ; voir § 13 pour les écarts spec ↔ règlement.
 2. ⚠ **Gammes de débit et pertes de pression des compteurs : absentes du règlement** (l'art. 9 les exige pour le choix du type et de la dimension). Source de données requise.
 3. ⚠ Critère de choix du type de compteur (volumétrique, turbine, composé, magnétique…) : non défini — relève de l'« autorité compétente ».
 4. ⚠ Annexe I : deux étapes portent le numéro « 5 » (erreur de numérotation de la source).
@@ -305,3 +305,23 @@ Contrôle de continuité (calculé, non tiré du PDF) : cas 1 — Q12 = 45 → 4
 13. ⚠ Croquis 004–006 : cotes graphiques partiellement lisibles (voir § 5) ; croquis 002/003 (vues en élévation) et 005 non relus en image (tableaux extraits du texte).
 14. Art. 2.1 renvoie à la Loi sur la fiscalité municipale (art. 204, 244.31 à 244.52) — **texte non inclus** dans le PDF ; l'admissibilité ne peut être que déclarative.
 15. Annexe A sert à la conformité des compteurs **non neufs** ; elle ne fournit pas de perte de pression.
+
+## 13. Écarts entre la spécification et le texte du règlement
+
+Le PDF prévaut (spec § 2 : source normative unique). Les références seront corrigées dans l'application.
+
+| # | Spec | Règlement (PDF) | Correction proposée |
+|---|---|---|---|
+| E1 | Assujettissement : « Article 2, al. 1 » | C'est l'**art. 2.1, al. 1** (1° à 3°). L'art. 2 traite de l'installation. | Citer art. 2.1. |
+| E2 | Exemption : « Article 2, dernier alinéa » | **Art. 2.1, al. 3**. | Citer art. 2.1 al. 3. |
+| E3 | Exemption : « Σ demandes de pointe annexe H ≤ demande de pointe méthode annexe I » | Estimation (inventaire H, **calculée selon la méthode de l'annexe I**) ≤ **demande de pointe définie à l'annexe I = 2,3 m³/h (10 gal US)**. | Comparer QPM calculé à 2,3 m³/h (voir ambiguïté 2,27 / 2,3). |
+| E4 | Sélection : « Article 9, al. 2 » | **Art. 9, al. 3**. | Citer art. 9 al. 3. |
+| E5 | Contestation : « Article 9, al. 3 » | **Art. 9, al. 4**. | Citer art. 9 al. 4. |
+| E6 | Antirefoulement : « Article 9, al. 1 et 4 » | Fiche E = al. 1 ; DAR = **al. 5** ; annexe B = al. 6. | Corriger. |
+| E7 | Art. 8/8.01 : un seul compteur pour plusieurs bâtiments | Applicable seulement **« lorsqu'une chambre de compteur doit être installée »** ; art. 8 exige en plus **aucun usage résidentiel** (8.01 non). | Ajouter ces conditions. |
+| E8 | Module 3 : électromagnétique « à partir de 50 mm » | L'art. 12 impose l'alimentation 120 V aux électromagnétiques ≥ 50 mm **munis d'une alimentation 120 V** ; il ne limite pas le type au diamètre. | Ne pas en faire une règle de sélection. |
+| E9 | Module 5 | L'**art. 8.1** (≥ 2 branchements sur un réseau privé → clapets/DAR en chambre) n'est pas dans la spec. | L'ajouter au module 5. |
+| E10 | Module 1 : résidentiel pur non assujetti « cohérent avec montreal.ca » | Source externe au PDF ; découle implicitement de l'art. 2.1. | Citer art. 2.1 seulement. |
+| E11 | Module 2 : courbe de Hunter de l'outil plomberie | Hors règlement ; outil non fourni. | Hors périmètre sauf fourniture de l'outil. |
+| E12 | Module 3 : AWWA M6 « citée à l'annexe A » comme source de gammes | L'annexe A ne donne que des **points d'essai de précision** ; aucune gamme de fonctionnement ni perte de pression. | Source compteurs à fournir. |
+| E13 | Module 7 : « 3 m/s (table de l'annexe C) » | Le tableau ne correspond pas exactement au calcul à 3 m/s. | Utiliser le tableau, afficher la note. |
