@@ -34,6 +34,14 @@
         quantites: { wc_reservoir: 1, lavabo: 1, evier_com: 2, laveuse: 1 }
       }
     ],
+    // Module 3 — pressions FICTIVES saisies par l'usager (le règlement ne fixe aucune valeur).
+    selection: {
+      sourceDemande: 'module2',
+      debitManuel: '',
+      pressionDisponibleKpa: 380,
+      pressionRequiseKpa: 350,
+      technologie: ''
+    },
     branchements: [
       { id: 'B1', type: 'Potable', diametreMm: 50, materiau: 'Cuivre' },
       { id: 'B2', type: 'Combiné', diametreMm: 150, materiau: 'Fonte' }

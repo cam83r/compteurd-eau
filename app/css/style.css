@@ -129,3 +129,40 @@ fieldset.tri label { margin-right: 14px; font-size: .9rem; white-space: nowrap; 
 }
 .champ .ref { align-self: flex-start; }
 @media (max-width: 860px) { .entete { position: static; } }
+
+/* Module 3 */
+:root { --s0: #2a6fdb; --s1: #d9730d; --s2: #0f9d8a; --s3: #8e44ad; --s4: #b8336a; --s5: #5d8a1c; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --s0: #6ea8ff; --s1: #ffa557; --s2: #4fd1bd; --s3: #c48ef0; --s4: #f27fb0; --s5: #9fd35a; }
+}
+.ref-src { background: var(--fond); color: var(--texte-doux); border: 1px solid var(--bord); }
+.badge-ok { background: var(--ok-fond); color: var(--ok); border: 1px solid var(--ok); }
+.pastille { font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.pastille-ok { color: var(--ok); }
+.pastille-warn { color: var(--warn); }
+.pastille-err { color: var(--err); }
+tr.propose td { background: var(--ok-fond); }
+.defile { overflow-x: auto; }
+.graphique { width: 100%; height: auto; display: block; }
+.graphique .grille-l { stroke: var(--bord); stroke-width: 1; }
+.graphique .axe { fill: var(--texte-doux); font-size: 11px; }
+.graphique .courbe { fill: none; stroke-width: 2.5; }
+.graphique .tirets, .legende .trait.tirets { stroke-dasharray: 7 4; }
+.graphique .demande { stroke: var(--texte); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.graphique .limite { stroke: var(--err); stroke-width: 1.5; }
+.graphique .point { stroke: var(--carte); stroke-width: 1.5; }
+.graphique .c0 { stroke: var(--s0); } .graphique .point.c0 { fill: var(--s0); }
+.graphique .c1 { stroke: var(--s1); } .graphique .point.c1 { fill: var(--s1); }
+.graphique .c2 { stroke: var(--s2); } .graphique .point.c2 { fill: var(--s2); }
+.graphique .c3 { stroke: var(--s3); } .graphique .point.c3 { fill: var(--s3); }
+.graphique .c4 { stroke: var(--s4); } .graphique .point.c4 { fill: var(--s4); }
+.graphique .c5 { stroke: var(--s5); } .graphique .point.c5 { fill: var(--s5); }
+.legende { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .82rem; }
+.legende li { display: flex; align-items: center; gap: 6px; }
+.legende .trait { display: inline-block; width: 22px; height: 0; border-top: 3px solid; }
+.legende .trait.tirets { border-top-style: dashed; }
+.legende .c0 { border-color: var(--s0); } .legende .c1 { border-color: var(--s1); } .legende .c2 { border-color: var(--s2); }
+.legende .c3 { border-color: var(--s3); } .legende .c4 { border-color: var(--s4); } .legende .c5 { border-color: var(--s5); }
+.legende .trait.demande { border-top: 2px dashed var(--texte); }
+.legende .trait.limite { border-color: var(--err); border-top-width: 2px; }
+.statut span .ref { vertical-align: 0; }

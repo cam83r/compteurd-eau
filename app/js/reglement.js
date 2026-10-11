@@ -110,6 +110,10 @@
     annI_q12p: { court: 'ann. I, étape 5', texte: 'Q12P : demande de pointe maximale pondérée, selon la formule correspondant au cas et à la plage de Q12.' },
     annI_qpm: { court: 'ann. I, étape « 5 » (QPM)', texte: 'QPUS = Q13 + Q12P (gal US/min) ; QPM = QPUS × 0,227 (m³/h). Le PDF numérote deux étapes « 5 ».' },
     annI_seuil: { court: 'ann. I', texte: 'Demande de pointe (QPM) : 2,3 m³/h (10 gal US). Pression théorique 414 kPa (60 PSI). Référence : AWWA M22, 2e édition.' },
+    art9_al4: { court: 'art. 9 al. 4', texte: "Sur demande du propriétaire, le dimensionnement du compteur exigé est modifié s'il est démontré, à l'aide de l'annexe D et de l'inventaire de l'annexe H ou d'un calcul hydraulique signé par un ingénieur, que le choix du compteur proposé est inadéquat pour assurer les besoins en eau de l'immeuble." },
+    art12: { court: 'art. 12', texte: "Le propriétaire dont l'immeuble est desservi par un compteur électromagnétique de 50 mm et plus, muni d'une alimentation électrique de 120 volts, doit fournir une alimentation électrique de 120 volts pour le compteur et ses équipements." },
+    art2_al2: { court: 'art. 2 al. 2', texte: "Pour un branchement existant, les compteurs requis sont fournis et installés par la Ville (sauf contraintes d'opération)." },
+    annB_diam: { court: 'ann. B', texte: 'Annexe B — préparation de tuyauterie : croquis 001 (20 à 50 mm), 002 (50 à 150 mm, dont 75 mm), 003 (200 à 300 mm).' },
     annD: { court: 'ann. D', texte: 'Annexe D — Questionnaire : fiche d\'information (révision 6).' },
     annD_13: { court: 'ann. D, § 1.3', texte: 'Annexe D, § 1.3 — Usages du bâtiment : vocation I.C.I. (industrielle, commerciale, institutionnelle) ; nombre d\'unités de logement ; salle de spectacle, théâtre, cinéma, école, stade, centre sportif, aréna, hôtel ou motel.' }
   };

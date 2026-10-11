@@ -160,7 +160,77 @@
     return res;
   }
 
+  // ---------- module 3 : sélection du compteur (art. 9 al. 3) ----------
+  var DB = (typeof module !== 'undefined' && module.exports) ? require('./compteurs.js') : root.CompteursDB;
+
+  // Perte de pression (psi) au débit q, par interpolation linéaire des points lus sur la fiche.
+  function perteA(compteur, q) {
+    var pts = compteur.perte;
+    if (!pts) return { statut: 'inconnue' };
+    var dernier = pts[pts.length - 1];
+    if (q > dernier[0]) return { statut: 'hors_courbe', maxDebit: dernier[0] };
+    for (var i = 1; i < pts.length; i++) {
+      if (q <= pts[i][0]) {
+        var a = pts[i - 1], b = pts[i];
+        var psi = a[1] + (b[1] - a[1]) * (q - a[0]) / (b[0] - a[0]);
+        return { statut: 'calculee', psi: psi, kpa: psi * DB.KPA_PAR_PSI };
+      }
+    }
+    return { statut: 'calculee', psi: pts[0][1], kpa: pts[0][1] * DB.KPA_PAR_PSI };
+  }
+
+  // Critères de l'art. 9 al. 3 pour un compteur, à la demande de pointe q (USGPM).
+  function evaluerCompteur(compteur, q, pertePermiseKpa) {
+    var notes = [];
+    var p = compteur.plageNormale;
+    var gamme = q > p[1] ? 'depasse' : (q < p[0] ? 'sous' : 'ok');
+    if (gamme === 'sous') notes.push('Demande de pointe sous la plage normale du compteur.');
+
+    var perte = perteA(compteur, q);
+    if (perte.statut === 'calculee') {
+      if (pertePermiseKpa == null) perte.verdict = 'a_evaluer';
+      else perte.verdict = perte.kpa <= pertePermiseKpa ? 'ok' : 'depasse';
+    }
+
+    if (DB.DIAMETRES_ANNEXE_B.indexOf(compteur.diametreMm) === -1) {
+      notes.push('Diamètre ' + compteur.diametreMm + ' mm non prévu à l\'annexe B (préparation de tuyauterie de 20 mm minimum).');
+    }
+    if (compteur.diametreMm === 75) notes.push('75 mm (3 po) : prévu à l\'annexe B, mais les annexes A et C utilisent 80 mm.');
+    if (compteur.technologie === 'electromagnetique' && compteur.diametreMm >= 50) {
+      notes.push('Électromagnétique ≥ 50 mm : exigences d\'alimentation 120 V de l\'art. 12 si le compteur en est muni.');
+    }
+
+    var statut;
+    if (gamme === 'depasse' || perte.statut === 'hors_courbe' || perte.verdict === 'depasse') statut = 'ecarte';
+    else if (gamme === 'ok' && perte.verdict === 'ok') statut = 'conforme';
+    else statut = 'sous_reserve';
+
+    return { compteur: compteur, gamme: gamme, perte: perte, notes: notes, statut: statut };
+  }
+
+  // Évalue la base et propose, par technologie, le plus petit diamètre non écarté
+  // parmi les diamètres de préparation prévus à l'annexe B.
+  function selectionnerCompteurs(q, pertePermiseKpa, technologie) {
+    var liste = DB.COMPTEURS
+      .filter(function (c) { return !technologie || c.technologie === technologie; })
+      .map(function (c) { return evaluerCompteur(c, q, pertePermiseKpa); })
+      .sort(function (a, b) { return a.compteur.diametreMm - b.compteur.diametreMm; });
+    var propositions = {};
+    liste.forEach(function (r) {
+      var t = r.compteur.technologie;
+      var prevuAnnexeB = DB.DIAMETRES_ANNEXE_B.indexOf(r.compteur.diametreMm) !== -1;
+      if (!propositions[t] && r.statut !== 'ecarte' && prevuAnnexeB) {
+        propositions[t] = r;
+        r.propose = true;
+      }
+    });
+    return { evaluations: liste, propositions: propositions };
+  }
+
   var api = {
+    perteA: perteA,
+    evaluerCompteur: evaluerCompteur,
+    selectionnerCompteurs: selectionnerCompteurs,
     nombre: nombre,
     contribution: contribution,
     calculerEtablissement: calculerEtablissement,

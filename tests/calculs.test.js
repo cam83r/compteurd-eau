@@ -94,5 +94,43 @@ test('Variante E — mixte sans inventaire → inventaire requis', function () {
   assert.strictEqual(a.exemption.statut, 'inventaire_requis');
 });
 
+console.log('Module 3 — sélection du compteur (fiches fabricants, lecture graphique)');
+var DB = require('../app/js/compteurs.js');
+function cpt(id) { return DB.COMPTEURS.filter(function (c) { return c.id === id; })[0]; }
+var q = dEx.qpus; // 20,23288 USGPM
+test('T-10 3/4 à 20,23288 gpm : 4,870563 psi (interpolation 18,1→4 / 23→6)', function () {
+  proche(C.perteA(cpt('T_10_3_4'), q).psi, 4 + 2 * (q - 18.1) / 4.9);
+  proche(C.perteA(cpt('T_10_3_4'), q).kpa, (4 + 2 * (q - 18.1) / 4.9) * 6.894757);
+});
+test('iPERL 3/4 à 20,23288 gpm : 2,9558912 psi', function () { proche(C.perteA(cpt('iPERL_3_4'), q).psi, 2.9558912); });
+test('T-10 1 po à 20,23288 gpm : 1,686073 psi', function () { proche(C.perteA(cpt('T_10_1'), q).psi, q * 2 / 24); });
+test('MACH 10 : perte inconnue → sous réserve', function () {
+  var r = C.evaluerCompteur(cpt('MACH_10_C_I_3'), q, 30); assert.strictEqual(r.perte.statut, 'inconnue'); assert.strictEqual(r.statut, 'sous_reserve');
+});
+test('Exemple (perte admissible 380 − 350 = 30 kPa) : T-10 3/4 écarté (33,58 kPa), T-10 1 po proposé', function () {
+  var s = C.selectionnerCompteurs(q, 30);
+  var t34 = s.evaluations.filter(function (r) { return r.compteur.id === 'T_10_3_4'; })[0];
+  assert.strictEqual(t34.statut, 'ecarte');
+  assert.strictEqual(s.propositions.volumetrique.compteur.id, 'T_10_1');
+  assert.strictEqual(s.propositions.volumetrique.statut, 'conforme');
+});
+test('Exemple : iPERL 3/4 proposé (20,38 kPa ≤ 30)', function () {
+  assert.strictEqual(C.selectionnerCompteurs(q, 30).propositions.electromagnetique.compteur.id, 'iPERL_3_4');
+});
+test('5/8 po (15 mm) jamais proposé : hors annexe B', function () {
+  var s = C.selectionnerCompteurs(5, 100);
+  assert.notStrictEqual(s.propositions.volumetrique.compteur.diametreMm, 15);
+  var r = s.evaluations.filter(function (x) { return x.compteur.id === 'T_10_5_8'; })[0];
+  assert.ok(r.notes.join(' ').indexOf('annexe B') > -1);
+});
+test('Sans pressions saisies → perte « à évaluer », sous réserve', function () {
+  var r = C.evaluerCompteur(cpt('T_10_1'), q, null); assert.strictEqual(r.perte.verdict, 'a_evaluer'); assert.strictEqual(r.statut, 'sous_reserve');
+});
+test('600 gpm : T-10 2 po et MACH 10 3 po écartés, MACH 10 4 po proposé', function () {
+  var s = C.selectionnerCompteurs(600, null);
+  assert.strictEqual(s.propositions.ultrasonique.compteur.id, 'MACH_10_C_I_4');
+  assert.ok(!s.propositions.volumetrique);
+});
+
 console.log('\n' + (total - echecs) + '/' + total + ' tests réussis');
 process.exit(echecs ? 1 : 0);

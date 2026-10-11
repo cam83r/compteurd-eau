@@ -31,6 +31,20 @@ Les résultats ci-dessous sont vérifiés automatiquement par `node tests/calcul
 - Statut : **assujetti** (art. 2.1 al. 1, 1°).
 - Exemption (art. 2.1 al. 3) : **non admissible** — QPM 4,593 m³/h > 2,3 m³/h.
 
+## Module 3 — sélection du compteur
+
+Demande : QPUS = 20,23288 USGPM (module 2). Pressions **fictives** : disponible 380 kPa, requise 350 kPa → perte admissible **30 kPa** (4,35 psi).
+
+| Compteur | Perte à 20,23 gpm (interpolation) | Résultat |
+|---|---|---|
+| T-10 3/4" | 4 + 2 × (20,23288 − 18,1) / 4,9 = 4,871 psi = **33,58 kPa** | écarté (> 30) |
+| T-10 1" | 2 × 20,23288 / 24 = 1,686 psi = **11,63 kPa** | **proposé (volumétrique)** |
+| iPERL 3/4" | 2,9 + 1,2 × 0,23288 / 5 = 2,956 psi = **20,38 kPa** | **proposé (électromagnétique)** |
+| iPERL 5/8" | 6,0 + 2,8 × 0,23288 / 5 = 6,13 psi = 42,3 kPa | écarté |
+| MACH 10 3" | perte non disponible | proposé **sous réserve** (ultrasonique) |
+
+Variante : 600 gpm saisis → T-10 2" et MACH 10 3" écartés (plage) ; MACH 10 4" proposé sous réserve.
+
 ## Variantes (tests)
 
 | Variante | Entrée | Résultat attendu |

@@ -18,14 +18,15 @@ enregistré dans le navigateur et peut être exporté ou importé en JSON.
 |---|---|
 | 1. Admissibilité (art. 2.1) | ✅ |
 | 2. Demande de pointe (annexes H et I) | ✅ |
-| 3. Sélection du compteur (art. 9) | ⏳ en attente des données compteurs (gamme de débit, perte de pression) |
+| 3. Sélection du compteur (art. 9) | ✅ base : Neptune T-10, Sensus iPERL, Neptune MACH 10 (perte MACH 10 manquante) |
 | 4 à 7 | ⏳ à venir |
 
 ## Documents
 
 - `docs/extraction_RCG_07-031.md` — extraction normative et écarts avec la spécification.
 - `docs/jeu_exemple.md` — jeu d'exemple et résultats attendus.
-- `docs/sources_compteurs_candidates.md` — données de fabricants trouvées, **non validées**.
+- `docs/donnees_compteurs.md` — données compteurs, sources et lectures graphiques.
+- `docs/fiches/` — fiches fabricants fournies.
 
 ## Tests
 

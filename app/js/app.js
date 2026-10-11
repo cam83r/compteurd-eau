@@ -8,7 +8,7 @@
   var MODULES = [
     { id: 'm1', titre: '1. Admissibilité', actif: true },
     { id: 'm2', titre: '2. Demande de pointe', actif: true },
-    { id: 'm3', titre: '3. Sélection du compteur', actif: false, attente: 'Données compteurs (gamme de débit, perte de pression) à fournir' },
+    { id: 'm3', titre: '3. Sélection du compteur', actif: true },
     { id: 'm4', titre: '4. Nombre et emplacement', actif: false },
     { id: 'm5', titre: '5. Chambre de compteur', actif: false },
     { id: 'm6', titre: '6. Préparation et installation', actif: false },
@@ -19,14 +19,20 @@
     return {
       projet: { nom: '', adresse: '', arrondissement: '' },
       admissibilite: { usage: '', critere1: '', critere2: '', critere3: '', aucunBranchement: '', partieResidentielle: '', nbLogements: '' },
-      etablissements: [{ id: nouvelId(), nom: 'Établissement 1', usageCas1: '', quantites: {} }]
+      etablissements: [{ id: nouvelId(), nom: 'Établissement 1', usageCas1: '', quantites: {} }],
+      selection: selectionVide()
     };
+  }
+
+  function selectionVide() {
+    return { sourceDemande: 'module2', debitManuel: '', pressionDisponibleKpa: '', pressionRequiseKpa: '', technologie: '' };
   }
 
   function nouvelId() { return 'e' + Math.random().toString(36).slice(2, 9); }
   function copie(o) { return JSON.parse(JSON.stringify(o)); }
 
   var etat = charger() || copie(EXEMPLE);
+  if (!etat.selection) etat.selection = selectionVide();
   var ongletActif = 'm1';
 
   function charger() {
@@ -76,6 +82,7 @@
     var main = document.getElementById('contenu');
     if (m.id === 'm1') main.innerHTML = vueModule1();
     else if (m.id === 'm2') main.innerHTML = vueModule2();
+    else if (m.id === 'm3') main.innerHTML = vueModule3();
     else main.innerHTML = '<section class="carte"><h2>' + esc(m.titre) + '</h2><p>Module à venir, dans l\'ordre de la spécification (1 → 7).</p>' +
       (m.attente ? '<p>' + aConfirmer(m.attente) + ' ' + esc(m.attente) + '. ' + ref('art9_al3') + '</p>' : '') + '</section>';
     majResultats();
@@ -255,8 +262,160 @@
     var d = Calculs.calculerDemandePointe(etat.etablissements);
     majModule1(d);
     majModule2(d);
+    majModule3(d);
     var titre = document.getElementById('titre-projet');
     if (titre) titre.textContent = etat.projet.nom || 'Projet sans nom';
+  }
+
+  // ---------- module 3 ----------
+  var TECHNOS = [['', 'Toutes'], ['volumetrique', 'Volumétrique'], ['electromagnetique', 'Électromagnétique'], ['ultrasonique', 'Ultrasonique']];
+  var STATUTS_CPT = {
+    conforme: ['Critères remplis', 'ok'],
+    sous_reserve: ['Sous réserve', 'warn'],
+    ecarte: ['Écarté', 'err']
+  };
+
+  function vueModule3() {
+    var s = etat.selection;
+    return '<div class="colonnes"><div>' +
+      '<section class="carte"><h2>Demande de pointe ' + ref('art9_al3') + '</h2>' +
+      '<fieldset class="tri"><legend>Source</legend>' +
+      '<label><input type="radio" name="src" data-champ="selection.sourceDemande" value="module2"' + (s.sourceDemande !== 'manuel' ? ' checked' : '') + '> Module 2 (annexe I)</label>' +
+      '<label><input type="radio" name="src" data-champ="selection.sourceDemande" value="manuel"' + (s.sourceDemande === 'manuel' ? ' checked' : '') + '> Saisie (ex. calcul hydraulique)</label></fieldset>' +
+      '<label class="champ">Débit saisi (USGPM) — utilisé si « Saisie »<input type="number" min="0" step="any" data-champ="selection.debitManuel" value="' + esc(s.debitManuel) + '"></label>' +
+      '<p id="m3-demande" class="sous-total"></p></section>' +
+      '<section class="carte"><h2>Perte de pression admissible</h2>' +
+      '<p class="aide">Le règlement ne fixe aucune valeur : la perte admissible découle des pressions saisies par le concepteur ' + ref('art9_al3') + '.</p>' +
+      '<div class="grille">' +
+      '<label class="champ">Pression disponible au branchement (kPa)<input type="number" min="0" step="any" data-champ="selection.pressionDisponibleKpa" value="' + esc(s.pressionDisponibleKpa) + '"></label>' +
+      '<label class="champ">Pression requise en aval du compteur (kPa)<input type="number" min="0" step="any" data-champ="selection.pressionRequiseKpa" value="' + esc(s.pressionRequiseKpa) + '"></label>' +
+      '</div><p id="m3-permise" class="sous-total"></p></section>' +
+      '<section class="carte"><h2>Technologie</h2><label class="champ">Filtrer<select data-champ="selection.technologie">' +
+      TECHNOS.map(function (t) { return '<option value="' + t[0] + '"' + (s.technologie === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') +
+      '</select></label><p class="aide">Base : fiches Neptune T-10, Sensus iPERL et Neptune MACH 10 fournies par l\'usager (docs/fiches). Pertes de pression lues sur les graphiques des fiches (≈ ±0,2 psi) ; MACH 10 : aucune donnée de perte dans la source.</p></section>' +
+      '</div><div><section class="carte resultat" id="m3-resultat" aria-live="polite"></section></div></div>' +
+      '<section class="carte" id="m3-graphique"></section>' +
+      '<section class="carte" id="m3-tableau"></section>' +
+      '<section class="carte"><h2>Dossier de contestation du dimensionnement ' + ref('art9_al4') + '</h2>' +
+      '<p>Si le compteur exigé par l\'autorité compétente paraît inadéquat pour les besoins en eau de l\'immeuble, la demande de modification s\'appuie sur l\'une des deux options :</p>' +
+      '<ol class="pieces"><li>Annexe D — fiche d\'information ' + ref('annD') + ' <strong>et</strong> annexe H — inventaire (module 2) ' + ref('annH_12') + '</li>' +
+      '<li><strong>ou</strong> calcul hydraulique signé par un ingénieur ' + ref('art9_al4') + '</li></ol>' +
+      '<p class="aide">L\'export des pièces pré-remplies sera ajouté avec la fonction d\'export (étape 6 de la spécification).</p></section>';
+  }
+
+  function demandeSelection(d) {
+    var s = etat.selection;
+    if (s.sourceDemande === 'manuel') return { q: Calculs.nombre(s.debitManuel), origine: 'saisie' };
+    return { q: d.qpus, origine: 'module2' };
+  }
+
+  function pertePermise() {
+    var s = etat.selection;
+    var dispo = Calculs.nombre(s.pressionDisponibleKpa), req = Calculs.nombre(s.pressionRequiseKpa);
+    if (s.pressionDisponibleKpa === '' || s.pressionRequiseKpa === '' || !dispo) return null;
+    return dispo - req;
+  }
+
+  function source(c, quoi) {
+    var page = quoi === 'perte' ? c.source.pagePerte : c.source.pagePlage;
+    var txt = 'Source : ' + c.source.doc + (page ? ', p. ' + page + ' du PDF' : '') + ' — ' + c.source.fichier +
+      (quoi === 'perte' ? '. Valeur lue sur le graphique (≈ ±0,2 psi), interpolée linéairement.' : '');
+    return '<span class="ref ref-src" tabindex="0" data-tip="' + esc(txt) + '">fiche</span>';
+  }
+
+  function nomCpt(c) { return c.fabricant + ' ' + c.modele + ' ' + c.diametrePo + ' po (' + c.diametreMm + ' mm)'; }
+
+  function textePerte(r) {
+    var p = r.perte;
+    if (p.statut === 'inconnue') return 'non disponible dans la source ' + aConfirmer('Perte de pression absente de la source fournie');
+    if (p.statut === 'hors_courbe') return 'hors courbe (courbe jusqu\'à ' + fmt(p.maxDebit) + ' gpm)';
+    return fmt(p.kpa, 1) + ' kPa (' + fmt(p.psi, 2) + ' psi)' + (p.verdict === 'a_evaluer' ? ' — à comparer : pressions non saisies' : '');
+  }
+
+  function majModule3(d) {
+    var el = document.getElementById('m3-resultat');
+    if (!el) return;
+    var dem = demandeSelection(d), q = dem.q, permise = pertePermise();
+    document.getElementById('m3-demande').innerHTML = dem.origine === 'module2'
+      ? 'QPUS = <strong>' + fmt(q, 3) + ' USGPM</strong> (QPM = ' + fmt(d.qpm, 3) + ' m³/h) ' + ref('annI_qpm')
+      : 'Débit saisi : <strong>' + fmt(q, 3) + ' USGPM</strong> (' + fmt(q * I.conversionM3hParUSGPM, 3) + ' m³/h) ' + ref('annH_conv');
+    document.getElementById('m3-permise').innerHTML = permise == null
+      ? 'Saisir les deux pressions pour évaluer le critère de perte de pression.'
+      : 'Perte admissible = <strong>' + fmt(permise, 1) + ' kPa</strong> (' + fmt(permise / CompteursDB.KPA_PAR_PSI, 2) + ' psi)' +
+        (permise <= 0 ? ' ' + aConfirmer('Pression disponible insuffisante') : '');
+
+    if (!(q > 0)) {
+      el.innerHTML = '<h2>Proposition</h2><p>Aucune demande de pointe : remplir l\'inventaire (module 2) ou saisir un débit.</p>';
+      document.getElementById('m3-graphique').innerHTML = '';
+      document.getElementById('m3-tableau').innerHTML = '';
+      return;
+    }
+    var sel = Calculs.selectionnerCompteurs(q, permise, etat.selection.technologie || null);
+    var h = '<h2>Proposition par technologie ' + ref('art9_al3') + '</h2>' +
+      '<p class="aide">L\'outil propose et justifie ; la détermination du type et de la dimension revient à l\'autorité compétente ' + ref('art9_al3') +
+      ', et les compteurs sont fournis par la Ville ' + ref('art2_al2') + '.</p>';
+    var props = TECHNOS.slice(1).map(function (t) { return sel.propositions[t[0]]; }).filter(Boolean);
+    if (!props.length) h += '<div class="statut statut-err"><strong>Aucun compteur de la base ne convient</strong><span>Demande hors des plages ou perte trop élevée pour les compteurs disponibles.</span></div>';
+    props.forEach(function (r) {
+      var c = r.compteur, st = STATUTS_CPT[r.statut];
+      h += '<div class="statut statut-' + st[1] + '"><strong>' + esc(nomCpt(c)) + '</strong>' +
+        '<span>' + esc(c.libelleTechno) + ' · ' + esc(c.norme) + ' · ' + st[0] + '</span>' +
+        '<span>' + (r.gamme === 'ok' ? '✓' : '⚠') + ' Gamme de débit : plage normale ' + fmt(c.plageNormale[0]) + ' à ' + fmt(c.plageNormale[1]) + ' gpm ' + source(c, 'plage') + '</span>' +
+        '<span>' + (r.perte.verdict === 'ok' ? '✓' : '⚠') + ' Perte de pression : ' + textePerte(r) + (r.perte.statut === 'calculee' ? ' ' + source(c, 'perte') : '') + '</span>' +
+        r.notes.map(function (n) { return '<span>⚠ ' + esc(n) + '</span>'; }).join('') + '</div>';
+    });
+    el.innerHTML = h;
+    document.getElementById('m3-graphique').innerHTML = graphiquePertes(sel.evaluations, q, permise);
+    document.getElementById('m3-tableau').innerHTML = tableauCompteurs(sel.evaluations);
+  }
+
+  function tableauCompteurs(evals) {
+    return '<h2>Tous les compteurs de la base</h2><div class="defile"><table class="inventaire"><thead><tr><th>Compteur</th><th>Technologie</th><th class="num">Plage normale (gpm)</th><th class="num">Bas débit (gpm)</th><th>Perte à la demande</th><th>Statut</th></tr></thead><tbody>' +
+      evals.map(function (r) {
+        var c = r.compteur, st = STATUTS_CPT[r.statut];
+        return '<tr' + (r.propose ? ' class="propose"' : '') + '><td>' + esc(nomCpt(c)) + (r.propose ? ' <span class="badge badge-ok">proposé</span>' : '') + '</td><td>' + esc(c.libelleTechno) + '</td>' +
+          '<td class="num">' + fmt(c.plageNormale[0]) + ' – ' + fmt(c.plageNormale[1]) + ' ' + source(c, 'plage') + '</td>' +
+          '<td class="num">' + fmt(c.basDebit, 3) + ' (' + esc(c.basDebitPrecision) + ')</td>' +
+          '<td>' + textePerte(r) + '</td>' +
+          '<td><span class="pastille pastille-' + st[1] + '">' + st[0] + '</span>' + (r.notes.length ? ' <span class="ref-note" tabindex="0" data-tip="' + esc(r.notes.join(' ')) + '">!</span>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  // Courbes de perte de pression (lecture des fiches) avec la demande et la perte admissible.
+  function graphiquePertes(evals, q, permise) {
+    var series = evals.filter(function (r) { return r.compteur.perte && r.compteur.plageNormale[1] >= q * 0.7; }).slice(0, 6);
+    if (!series.length) return '<h2>Courbes de perte de pression</h2><p class="aide">Aucune courbe disponible pour cette demande (MACH 10 : perte non fournie).</p>';
+    var W = 640, H = 300, g = { l: 44, r: 12, t: 12, b: 38 };
+    var xmax = Math.max(q * 1.6, 10);
+    var plusLongue = Math.max.apply(null, series.map(function (r) { var p = r.compteur.perte; return p[p.length - 1][0]; }));
+    xmax = Math.min(xmax, plusLongue);
+    if (xmax < q * 1.1) xmax = q * 1.1;
+    var ymax = 10;
+    function X(v) { return g.l + v / xmax * (W - g.l - g.r); }
+    function Y(v) { return H - g.b - v / ymax * (H - g.t - g.b); }
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="graphique" role="img" aria-label="Courbes de perte de pression en fonction du débit">';
+    for (var y = 0; y <= ymax; y += 2) svg += '<line class="grille-l" x1="' + g.l + '" x2="' + (W - g.r) + '" y1="' + Y(y) + '" y2="' + Y(y) + '"/><text class="axe" x="' + (g.l - 6) + '" y="' + (Y(y) + 4) + '" text-anchor="end">' + y + '</text>';
+    var pas = xmax > 200 ? 50 : xmax > 80 ? 20 : xmax > 30 ? 10 : 5;
+    for (var x = 0; x <= xmax; x += pas) svg += '<line class="grille-l" x1="' + X(x) + '" x2="' + X(x) + '" y1="' + g.t + '" y2="' + (H - g.b) + '"/><text class="axe" x="' + X(x) + '" y="' + (H - g.b + 16) + '" text-anchor="middle">' + x + '</text>';
+    svg += '<text class="axe" x="' + ((W + g.l) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">Débit (gal US/min)</text>';
+    svg += '<text class="axe" transform="translate(12 ' + ((H - g.b) / 2) + ') rotate(-90)" text-anchor="middle">Perte (psi)</text>';
+    svg += '<defs><clipPath id="zone"><rect x="' + g.l + '" y="' + g.t + '" width="' + (W - g.l - g.r) + '" height="' + (H - g.t - g.b) + '"/></clipPath></defs><g clip-path="url(#zone)">';
+    if (permise != null) {
+      var pp = permise / CompteursDB.KPA_PAR_PSI;
+      svg += '<line class="limite" x1="' + g.l + '" x2="' + (W - g.r) + '" y1="' + Y(pp) + '" y2="' + Y(pp) + '"/>';
+    }
+    series.forEach(function (r, i) {
+      var pts = r.compteur.perte.map(function (p) { return X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1); }).join(' ');
+      svg += '<polyline class="courbe c' + i + (r.compteur.technologie === 'electromagnetique' ? ' tirets' : '') + '" points="' + pts + '"/>';
+      if (r.perte.statut === 'calculee') svg += '<circle class="point c' + i + '" cx="' + X(q) + '" cy="' + Y(r.perte.psi) + '" r="4"/>';
+    });
+    svg += '<line class="demande" x1="' + X(q) + '" x2="' + X(q) + '" y1="' + g.t + '" y2="' + (H - g.b) + '"/></g></svg>';
+    var legende = '<ul class="legende">' + series.map(function (r, i) {
+      return '<li><span class="trait c' + i + (r.compteur.technologie === 'electromagnetique' ? ' tirets' : '') + '"></span>' + esc(nomCpt(r.compteur)) + '</li>';
+    }).join('') + '<li><span class="trait demande"></span>Demande ' + fmt(q, 2) + ' gpm</li>' +
+      (permise != null ? '<li><span class="trait limite"></span>Perte admissible ' + fmt(permise / CompteursDB.KPA_PAR_PSI, 2) + ' psi</li>' : '') + '</ul>';
+    return '<h2>Courbes de perte de pression ' + ref('art9_al3') + '</h2>' + svg + legende +
+      '<p class="aide">Courbes reconstituées à partir des points lus sur les graphiques des fiches fabricants (≈ ±0,2 psi) — à confirmer.</p>';
   }
 
   // ---------- événements ----------
@@ -346,6 +505,7 @@
       var o = JSON.parse(txt);
       if (!o || !o.admissibilite || !Array.isArray(o.etablissements)) throw new Error('format');
       etat = o;
+      if (!etat.selection) etat.selection = selectionVide();
       sauver();
       rendre();
     }).catch(function () { alert('Fichier de projet invalide.'); });
