@@ -19,7 +19,10 @@ enregistré dans le navigateur et peut être exporté ou importé en JSON.
 | 1. Admissibilité (art. 2.1) | ✅ |
 | 2. Demande de pointe (annexes H et I) | ✅ |
 | 3. Sélection du compteur (art. 9) | ✅ base : Neptune T-10, Sensus iPERL, Neptune MACH 10 (perte MACH 10 manquante) |
-| 4 à 7 | ⏳ à venir |
+| 4. Nombre et emplacement (art. 3, 4, 8, 8.01) | ✅ |
+| 5. Chambre de compteur (art. 5 à 7, 8.1, annexe B) | ✅ |
+| 6. Préparation et installation (art. 9, 11, 12, annexes B, E, G) | ✅ |
+| 7. Consommation réputée (art. 13, annexe C) | ✅ |
 
 ## Documents
 

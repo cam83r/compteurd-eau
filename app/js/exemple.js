@@ -42,10 +42,24 @@
       pressionRequiseKpa: 350,
       technologie: ''
     },
+    // Modules 4 à 7.
+    immeuble: { reseauPrive: 'non', codeUsageG: '' },
     branchements: [
-      { id: 'B1', type: 'Potable', diametreMm: 50, materiau: 'Cuivre' },
-      { id: 'B2', type: 'Combiné', diametreMm: 150, materiau: 'Fonte' }
-    ]
+      {
+        id: 'B1', nom: 'B1 — logements', type: 'potable', temporaire: 'non', diametreMm: 50, materiau: 'Cuivre',
+        neuf: 'existant', joints: 3, cuivreKArgent: 'non', nbBatiments: 1, memeProprietaire: 'oui',
+        dessertEtablissements: 'non', dessertResidentiel: 'oui', separationAutrePiece: '',
+        diametrePreparationMm: '', typeCompteur: '', alimentation120: ''
+      },
+      {
+        id: 'B2', nom: 'B2 — commerces et gicleurs', type: 'combine', temporaire: 'non', diametreMm: 100, materiau: 'Fonte',
+        neuf: 'existant', joints: 8, cuivreKArgent: 'non', nbBatiments: 1, memeProprietaire: 'oui',
+        dessertEtablissements: 'oui', dessertResidentiel: 'non', separationAutrePiece: '',
+        diametrePreparationMm: 25, typeCompteur: 'volumetrique', alimentation120: ''
+      }
+    ],
+    // Module 7 — période et tarif FICTIFS saisis par l'usager.
+    consommation: { diametreMm: 50, jours: 30, tarif: '' }
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = EXEMPLE;

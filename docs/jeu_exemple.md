@@ -7,7 +7,7 @@ Les résultats ci-dessous sont vérifiés automatiquement par `node tests/calcul
 
 - 1234, rue de l'Exemple (fictive), LaSalle — vocation commerciale, **6 logements** (partie résidentielle).
 - Critère art. 2.1 al. 1, 1° : oui (fictif) ; 2° : non ; 3° : non. Bâtiment relié à un branchement.
-- Branchements (pour les modules 4 à 7) : B1 potable 50 mm cuivre ; B2 combiné 150 mm fonte.
+- Branchements : B1 potable 50 mm cuivre, existant, 3 joints, dessert seulement les logements ; B2 combiné 100 mm fonte, existant, 8 joints, dessert les gicleurs et les deux établissements. Pas de réseau privé.
 
 | Établissement | Appareils (annexe H) | Q12 (USGPM) | Q13 (USGPM) |
 |---|---|---|---|
@@ -44,6 +44,30 @@ Demande : QPUS = 20,23288 USGPM (module 2). Pressions **fictives** : disponible 
 | MACH 10 3" | perte non disponible | proposé **sous réserve** (ultrasonique) |
 
 Variante : 600 gpm saisis → T-10 2" et MACH 10 3" écartés (plage) ; MACH 10 4" proposé sous réserve.
+
+## Module 4 — nombre et emplacement
+
+| Branchement | Résultat | Réf. |
+|---|---|---|
+| B1 | Aucun compteur de consommation I.C.I. (aucun établissement desservi) — à confirmer | art. 3 ; ann. D § 1.7 |
+| B2 | Compteur requis, sur la conduite d'eau potable après séparation de l'incendie ; dans la chambre si l'option a) est retenue | art. 3 ; ann. B, A2 |
+
+## Module 5 — chambre de compteur
+
+| Branchement | Résultat | Réf. |
+|---|---|---|
+| B1 | 3 joints ≤ 5 → chambre non requise | art. 5 |
+| B2 | 8 joints > 5, existant → a) construire une chambre ou b) rapport annuel de détection de fuite ; séparation incendie dans la chambre ; croquis 006 | art. 5, 7 ; ann. B |
+
+## Module 6 — préparation et installation (B2, compteur 25 mm volumétrique)
+
+- Croquis 001 : pièce de transition 273 mm (10 3/4 po), fileté 1 1/4 po mâle ; union de compteur 25 mm ; dégagements 300 / 100 / 125 / 125 mm.
+- Dérivation : **interdite** (usage hors annexe G) — art. 11 ; ann. B, croquis 001, A7.
+- Art. 12 : non applicable (compteur volumétrique).
+
+## Module 7 — consommation réputée
+
+Entrée d'eau domestique 50 mm (fictif) → **530 m³/jour** (annexe C) ; 30 jours (fictif) → **15 900 m³**.
 
 ## Variantes (tests)
 

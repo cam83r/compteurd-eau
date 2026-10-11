@@ -132,5 +132,77 @@ test('600 gpm : T-10 2 po et MACH 10 3 po écartés, MACH 10 4 po proposé', fun
   assert.ok(!s.propositions.volumetrique);
 });
 
+console.log('Modules 4 à 7 — branchements');
+var B = require('../app/js/branchements.js');
+var b1 = EXEMPLE.branchements[0], b2 = EXEMPLE.branchements[1];
+var ch1 = B.evaluerChambre(b1, EXEMPLE.immeuble, 2), ch2 = B.evaluerChambre(b2, EXEMPLE.immeuble, 2);
+test('Exemple B1 : 3 joints → chambre non requise', function () { assert.strictEqual(ch1.statut, 'non_requise'); });
+test('Exemple B2 : 8 joints, existant → option a) chambre ou b) rapport annuel', function () {
+  assert.strictEqual(ch2.statut, 'option'); assert.strictEqual(ch2.options.length, 2);
+});
+test('Exemple B2 : combiné → séparation incendie dans la chambre (art. 7), croquis 006', function () {
+  assert.ok(ch2.separationIncendie); assert.strictEqual(ch2.croquis.code, '006');
+});
+test('Nouveau branchement, 6 joints → chambre requise', function () {
+  assert.strictEqual(B.evaluerChambre({ type: 'potable', neuf: 'nouveau', joints: 6 }, {}, 1).statut, 'requise');
+});
+test('Cuivre K soudé à l\'argent, 12 joints → art. 6, non requise', function () {
+  assert.strictEqual(B.evaluerChambre({ type: 'potable', neuf: 'nouveau', joints: 12, cuivreKArgent: 'oui' }, {}, 1).statut, 'non_requise');
+});
+test('Réseau privé avec 2 branchements → chambre requise (art. 8.1), même avec cuivre K', function () {
+  assert.strictEqual(B.evaluerChambre({ type: 'potable', joints: 0, cuivreKArgent: 'oui' }, { reseauPrive: 'oui' }, 2).statut, 'requise');
+});
+test('Joints non renseignés → à confirmer', function () {
+  assert.strictEqual(B.evaluerChambre({ type: 'potable' }, {}, 1).statut, 'a_confirmer');
+});
+test('Exemple B1 : aucun établissement → aucun compteur I.C.I.', function () {
+  assert.strictEqual(B.evaluerComptage(b1, ch1, 'oui').statut, 'aucun');
+});
+test('Exemple B2 : compteur requis, sur l\'entrée d\'eau', function () {
+  var c = B.evaluerComptage(b2, ch2, 'oui'); assert.strictEqual(c.statut, 'requis'); assert.ok(c.points[0].indexOf('entrée d\'eau') > -1);
+});
+test('Incendie → aucun compteur (art. 3)', function () { assert.strictEqual(B.evaluerComptage({ type: 'incendie' }, null, '').statut, 'aucun'); });
+test('Résidentiel + séparation dans une autre pièce → un seul compteur (art. 4)', function () {
+  var c = B.evaluerComptage({ type: 'potable', dessertEtablissements: 'oui', dessertResidentiel: 'oui', separationAutrePiece: 'oui' }, null, 'oui');
+  assert.ok(c.motifs.some(function (m) { return m.ref === 'art4'; }));
+});
+test('3 bâtiments, chambre requise, un propriétaire, sans résidentiel → un seul compteur (art. 8)', function () {
+  var c = B.evaluerComptage({ type: 'potable', dessertEtablissements: 'oui', dessertResidentiel: 'non', nbBatiments: 3, memeProprietaire: 'oui' }, { statut: 'requise' }, 'non');
+  assert.ok(c.unSeulCompteurBatiments);
+});
+test('Idem avec usage résidentiel → art. 8 non applicable', function () {
+  var c = B.evaluerComptage({ type: 'potable', dessertEtablissements: 'oui', dessertResidentiel: 'non', nbBatiments: 3, memeProprietaire: 'oui' }, { statut: 'requise' }, 'oui');
+  assert.ok(!c.unSeulCompteurBatiments);
+});
+test('Combiné, 3 bâtiments, chambre requise → un seul compteur (art. 8.01) même avec résidentiel', function () {
+  var c = B.evaluerComptage({ type: 'combine', dessertEtablissements: 'oui', dessertResidentiel: 'oui', nbBatiments: 3, memeProprietaire: 'oui' }, { statut: 'requise' }, 'oui');
+  assert.ok(c.unSeulCompteurBatiments);
+});
+test('Préparation 25 mm : croquis 001, pièce de transition 273 mm, dégagements 300/100/125/125', function () {
+  var p = B.preparationTuyauterie(25); assert.strictEqual(p.length, 1);
+  assert.strictEqual(p[0].ligne.transition, 273); assert.deepStrictEqual([p[0].ligne.A, p[0].ligne.B, p[0].ligne.C, p[0].ligne.D], [300, 100, 125, 125]);
+});
+test('Préparation 50 mm : croquis 001 et 002', function () { assert.strictEqual(B.preparationTuyauterie(50).length, 2); });
+test('Préparation 150 mm : LD 1810, LS 685', function () { var l = B.preparationTuyauterie(150)[0].ligne; assert.strictEqual(l.LD, 1810); assert.strictEqual(l.LS, 685); });
+test('Dérivation 25 mm, usage hors annexe G → interdite', function () { assert.strictEqual(B.evaluerDerivation(25, 100, '').statut, 'interdite'); });
+test('Dérivation 25 mm, clinique 6517, branchement 40 mm → permise (art. 11)', function () { assert.strictEqual(B.evaluerDerivation(25, 40, '6517').statut, 'permise'); });
+test('Dérivation 25 mm, clinique 6517, branchement 50 mm → interdite', function () { assert.strictEqual(B.evaluerDerivation(25, 50, '6517').statut, 'interdite'); });
+test('Dérivation 100 mm → obligatoire ; 50 mm → à confirmer', function () {
+  assert.strictEqual(B.evaluerDerivation(100, 100, '').statut, 'obligatoire'); assert.strictEqual(B.evaluerDerivation(50, 50, '').statut, 'a_confirmer');
+});
+test('Art. 12 : électromagnétique 100 mm, 120 V, en chambre → 9 exigences', function () {
+  var e = B.evaluerElectrique('electromagnetique', 100, 'oui', true); assert.strictEqual(e.statut, 'applicable'); assert.strictEqual(e.exigences.length, 9);
+});
+test('Art. 12 : volumétrique ou électromagnétique 25 mm → non applicable', function () {
+  assert.strictEqual(B.evaluerElectrique('volumetrique', 100, 'oui', true).statut, 'non_applicable');
+  assert.strictEqual(B.evaluerElectrique('electromagnetique', 25, 'oui', true).statut, 'non_applicable');
+});
+test('Annexe C : 50 mm → 530 m³/j ; inconnu → 86 ; 15 mm → 86', function () {
+  assert.strictEqual(B.consommationReputee(50).m3j, 530); assert.strictEqual(B.consommationReputee('').m3j, 86); assert.strictEqual(B.consommationReputee(15).m3j, 86);
+});
+test('Annexe C : 75 mm et 400 mm → non couverts', function () {
+  assert.strictEqual(B.consommationReputee(75).couvert, false); assert.strictEqual(B.consommationReputee(400).couvert, false);
+});
+
 console.log('\n' + (total - echecs) + '/' + total + ' tests réussis');
 process.exit(echecs ? 1 : 0);

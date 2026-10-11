@@ -40,6 +40,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0;
   background: var(--fond);
@@ -194,6 +195,21 @@ tr.propose td { background: var(--ok-fond); }
 .bandeau .export { display: flex; flex-direction: column; gap: 6px; width: 100%; }
 .bandeau textarea { width: 100%; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--texte); background: var(--carte); border: 1px solid var(--bord); border-radius: 6px; padding: 6px; }
 .export-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Modules 4 à 7 */
+.schema { list-style: none; padding: 0; margin: 10px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .8rem; }
+.schema .noeud { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--bord); background: var(--fond); }
+.schema .noeud:not(:last-child)::after { content: "→"; margin-left: 10px; color: var(--texte-doux); }
+.schema .noeud { display: inline-flex; align-items: center; }
+.schema .noeud-compteur { border-color: var(--accent); background: var(--ref-fond); color: var(--accent); font-weight: 700; }
+.schema .noeud-chambre { border-style: dashed; border-color: var(--texte-doux); }
+.schema .noeud-incendie { border-color: var(--err); color: var(--err); }
+.schema .noeud-dar { border-color: var(--warn); color: var(--warn); }
+.liste-controle { list-style: none; padding: 0; margin: .5rem 0; display: flex; flex-direction: column; gap: 6px; }
+.liste-controle li { display: flex; gap: 8px; align-items: baseline; }
+.liste-controle .case { flex: 0 0 auto; width: 12px; height: 12px; border: 1.5px solid var(--texte-doux); border-radius: 2px; transform: translateY(1px); }
+h2 small.aide { font-weight: 400; }
+.colonnes > div > .resultat:not(.carte) { position: static; }
 </style>
 <header class="entete">
     <div class="entete-ligne">
@@ -313,6 +329,121 @@ tr.propose td { background: var(--ok-fond); }
     ]
   };
 
+
+  // Annexe B — tableaux des dimensions (mm). Croquis 001 : 20 à 50 mm ; 002 : 50 à 150 mm ; 003 : 200 à 300 mm.
+  var ANNEXE_B = {
+    croquis001: {
+      titre: 'Croquis 001 — préparation de tuyauterie 20 mm (3/4 po) à 50 mm (2 po), révision 12',
+      lignes: [
+        { d: 20, po: '3/4', transition: 229, transitionPo: '9', raccordTransition: 'Fileté 1 po mâle', raccord: 'Union de compteur 20 mm (3/4 po)', A: 300, B: 100, C: 100, D: 100 },
+        { d: 25, po: '1', transition: 273, transitionPo: '10 3/4', raccordTransition: 'Fileté 1 1/4 po mâle', raccord: 'Union de compteur 25 mm (1 po)', A: 300, B: 100, C: 125, D: 125 },
+        { d: 40, po: '1 1/2', transition: 330, transitionPo: '13', raccordTransition: 'Bride ovale 2 boulons', raccord: 'Bride ovale 2 boulons', A: 400, B: 150, C: 150, D: 150 },
+        { d: 50, po: '2', transition: 432, transitionPo: '17', raccordTransition: 'Bride ovale 2 boulons', raccord: 'Bride ovale 2 boulons', A: 400, B: 150, C: 150, D: 150 }
+      ],
+      robinets: 'Robinets d\'isolation : à bille, classe 125, passage intégral, tige inéjectable, MSS-SP110 (corps laiton, garniture et siège PTFE).',
+      derivation: 'Voies de dérivation interdites, sauf pour les immeubles répondant aux exigences de l\'article 11 (note A7).'
+    },
+    croquis002: {
+      titre: 'Croquis 002 — préparation de tuyauterie 50 mm (2 po) à 150 mm (6 po), révision 12/13',
+      lignes: [
+        { d: 50, po: '2', LD: 632, LS: 432, LT: 200, LC: 200, LP: 125, A: 410, B: 343, C: 180, D: 180 },
+        { d: 75, po: '3', LD: 1070, LS: 483, LT: 380, LC: 200, LP: 220, A: 410, B: 343, C: 180, D: 180 },
+        { d: 100, po: '4', LD: 1310, LS: 584, LT: 475, LC: 250, LP: 275, A: 440, B: 356, C: 225, D: 225 },
+        { d: 150, po: '6', LD: 1810, LS: 685, LT: 750, LC: 300, LP: 450, A: 440, B: 356, C: 225, D: 225 }
+      ],
+      robinets: 'Robinet d\'isolation : à bille classe 600 passage intégral (50 mm et plus) ou à vanne classe 125 (75 mm et plus). Robinet de dérivation : à bille classe 600, à vanne ou à papillon (75 mm et plus).',
+      derivation: 'Voie de dérivation permanente obligatoire, parallèle au compteur, de même diamètre ou d\'un diamètre inférieur (inférieur seulement pour l\'eau domestique) ; robinet scellé fermé par la Ville (note A7).'
+    },
+    croquis003: {
+      titre: 'Croquis 003 — préparation de tuyauterie 200 mm (8 po) à 300 mm (12 po), révision 13',
+      lignes: [
+        { d: 200, po: '8', LD: 2200, LC: 350, LT: 1025, LP: 625, A: 500, B: 405, C: 350, D: 350 },
+        { d: 250, po: '10', LD: 2750, LC: 450, LT: 1275, LP: 775, A: 500, B: 520, C: 370, D: 370 },
+        { d: 300, po: '12', LD: 3300, LC: 500, LT: 1550, LP: 950, A: 535, B: 535, C: 395, D: 395 }
+      ],
+      robinets: 'Robinet d\'isolation : à vanne classe 125 (AWWA C509, C550, ANSI/ASME B16.1, NSF-61). Robinet de dérivation : à bille classe 600, à vanne ou à papillon.',
+      derivation: 'Voie de dérivation permanente obligatoire (note A7).'
+    },
+    // Notes générales communes aux croquis 001 à 003.
+    notesInstallation: [
+      { code: 'A2', texte: 'Le compteur mesure uniquement l\'eau potable, pas l\'eau de protection incendie ; il est installé sur le branchement d\'eau potable.' },
+      { code: 'A3', texte: 'Aucun branchement en amont du compteur, autre que celui de protection incendie ou de consommation purement résidentielle.' },
+      { code: 'A4', texte: 'Compteur installé à moins de 3 m de l\'entrée d\'eau du bâtiment.' },
+      { code: 'A5', texte: 'Toute conduite entre l\'entrée d\'eau et le compteur (dérivation comprise) facilement accessible pour inspection visuelle.' },
+      { code: 'A6', texte: 'Aucun équipement (DAR, clapet, régulateur de pression, robinet de régulation) en amont du compteur, sauf branchement purement résidentiel en amont.' },
+      { code: 'B1', texte: 'Endroit accessible, à l\'abri de la submersion, de la vibration et du gel ; température entre 5 et 40 °C ; dégagement libre de 1200 mm en hauteur et 1000 mm devant le compteur.' },
+      { code: 'B2', texte: 'Compteur installé entre 300 mm et 1500 mm au-dessus du sol.' },
+      { code: 'B4', texte: 'Compteur accessible en tout temps ; porte d\'accès possible s\'il est dans une cloison.' },
+      { code: 'C1', texte: 'Installation conforme au Code de construction du Québec, chapitre III — Plomberie.' },
+      { code: 'C3/C2', texte: 'Compteur (ou pièce de transition) installé à l\'horizontale, registre vers le haut.' },
+      { code: 'C6/C7', texte: 'Robinet d\'isolation en amont et en aval du compteur ; aucun autre raccord entre ces deux robinets.' },
+      { code: 'C11', texte: 'Tuyauterie supportée de part et d\'autre du compteur ou de la pièce de transition.' },
+      { code: 'C12', texte: 'Conduit électrique de 12 mm (1/2 po) avec tire-fils, du compteur au module de transmission monté au mur extérieur.' },
+      { code: 'C13/C14', texte: 'Boulons, écrous et rondelles du compteur en acier inoxydable 316.' }
+    ],
+    chambre: [
+      { code: '004', texte: 'Ouverture de 750 mm avec couvercle plein.' },
+      { code: '004', texte: 'Hauteur libre intérieure de 1800 mm minimum.' },
+      { code: '004', texte: 'Dégagement de 600 mm minimum devant le compteur.' },
+      { code: '004', texte: 'Drain de plancher ; drainage conforme à la Directive 001 du ministère de l\'Environnement.' },
+      { code: '004', texte: 'Robinets d\'isolation amont et aval ancrés au mur par 2 tiges du diamètre des boulons des brides.' },
+      { code: '004', texte: 'Robinet d\'arrêt de la Ville requis lorsqu\'aucun robinet n\'est installé en amont de la chambre.' },
+      { code: '004', texte: 'Panneau électrique (si requis) à 20 m maximum de la chambre.' },
+      { code: '004', texte: 'Les dimensions des croquis de chambre ont préséance sur celles des croquis 001 à 003.' },
+      { code: '004', texte: 'Cotes « 1350 mm min. » et « 450 mm min. » lisibles sur le croquis, référence exacte à confirmer.', aConfirmer: true }
+    ],
+    croquisChambre: {
+      potable: { code: '004', titre: 'Croquis 004 — chambre de compteur, branchement d\'eau potable (révision 6)' },
+      incendie: { code: '005', titre: 'Croquis 005 — chambre de compteur, branchement de protection incendie, détection de fuite (révision 5) : soupape de retenue ou DAR approuvé UL, ULC ou FM' },
+      combine: { code: '006', titre: 'Croquis 006 — chambre de compteur, branchement d\'eau combiné, mesure de consommation et détection de fuite (révision 5) : accès entre les deux conduites ; cotes « 2 400 mm min. », « 1 900 mm min. », « 900 mm min. » à confirmer' }
+    }
+  };
+
+  // Annexe C — consommation réputée maximale (révision 2).
+  var ANNEXE_C = [
+    { d: 20, libelle: '20 ou moins', m3j: 86 },
+    { d: 25, libelle: '25', m3j: 150 },
+    { d: 40, libelle: '40', m3j: 310 },
+    { d: 50, libelle: '50', m3j: 530 },
+    { d: 80, libelle: '80', m3j: 1200 },
+    { d: 100, libelle: '100', m3j: 2400 },
+    { d: 150, libelle: '150', m3j: 5400 },
+    { d: 200, libelle: '200', m3j: 9600 },
+    { d: 250, libelle: '250', m3j: 15000 },
+    { d: 300, libelle: '300', m3j: 21000 },
+    { d: 350, libelle: '350', m3j: 28000 }
+  ];
+
+  // Annexe G — types d'usage autorisés pour une voie de dérivation (révision 2).
+  var ANNEXE_G = [
+    ['3915', 'Atelier de mécanicien-dentiste'], ['6539', 'Autres centres de services sociaux'],
+    ['6519', 'Autres services médicaux et de santé'], ['7512', 'Centre de santé'],
+    ['6533', 'Centre de services sociaux (C.S.S. et C.R.S.S.S.)'], ['6517', 'Clinique médicale (cabinet de médecins généralistes)'],
+    ['6542', 'Maison pour personnes en difficulté'], ['1543', 'Maison pour personnes retraitées autonomes'],
+    ['1541', 'Maison pour personnes retraitées non autonomes'], ['6516', 'Sanatorium, maison de convalescence et maison de repos'],
+    ['6515', 'Service de laboratoire dentaire'], ['6514', 'Service de laboratoire médical'],
+    ['6572', 'Service de physiothérapie'], ['6564', 'Service de podiatrie'],
+    ['8221', 'Service de vétérinaires (animaux de ferme)'], ['6598', 'Service de vétérinaires (animaux domestiques)'],
+    ['6512', 'Service dentaire'], ['6513', 'Service d\'hôpital'],
+    ['8222', 'Service d\'hôpital pour les animaux'], ['6518', 'Service d\'optométrie'], ['6565', 'Service d\'orthopédie']
+  ].map(function (x) { return { code: x[0], libelle: x[1] }; });
+
+  // Article 12 — alimentation électrique des compteurs électromagnétiques de 50 mm et plus.
+  var ARTICLE_12 = {
+    general: 'Fournir une alimentation électrique de 120 V pour le compteur et ses équipements.',
+    chambre: [
+      'Alimentation fournie dans un panneau électrique à l\'extérieur de la chambre.',
+      'Panneau verrouillable et facilement accessible.',
+      'Panneau installé à 1,5 m au-dessus du niveau du sol.',
+      'Panneau à 20 m maximum de la chambre de compteur.',
+      'Conduit électrique de 50 mm reliant le panneau à la chambre.',
+      'Panneau résistant aux intempéries ; température intérieure maintenue entre 0 et 50 °C.',
+      'Espace libre de 300 mm (largeur) × 300 mm (hauteur) × 200 mm (profondeur) pour les équipements de la Ville.',
+      'Panneau à l\'usage exclusif de l\'autorité compétente, verrouillé par elle après installation.'
+    ],
+    horsChambre: 'Prise d\'alimentation 120 Vca à moins de 5 m du compteur, lorsque requis par le directeur (annexe B, croquis 002 et 003, note B5).'
+  };
+
   // Références citées dans les infobulles.
   var REFS = {
     art2_1_al1: { court: 'art. 2.1 al. 1', texte: "L'exigence d'installer un compteur s'applique seulement à tout branchement d'eau d'un immeuble : 1° porté au rôle, catégorie des immeubles non résidentiels (LFM art. 244.31), classes 5 à 10 (art. 244.32) ou unités visées aux art. 244.36, 244.51 ou 244.52 ; 2° visé par l'art. 204 LFM, par. 1 à 9 ou 11 à 19 ; 3° utilisé ou destiné à être utilisé en partie ou en totalité à des fins non résidentielles et pas encore porté au rôle." },
@@ -333,6 +464,32 @@ tr.propose td { background: var(--ok-fond); }
     art12: { court: 'art. 12', texte: "Le propriétaire dont l'immeuble est desservi par un compteur électromagnétique de 50 mm et plus, muni d'une alimentation électrique de 120 volts, doit fournir une alimentation électrique de 120 volts pour le compteur et ses équipements." },
     art2_al2: { court: 'art. 2 al. 2', texte: "Pour un branchement existant, les compteurs requis sont fournis et installés par la Ville (sauf contraintes d'opération)." },
     annB_diam: { court: 'ann. B', texte: 'Annexe B — préparation de tuyauterie : croquis 001 (20 à 50 mm), 002 (50 à 150 mm, dont 75 mm), 003 (200 à 300 mm).' },
+    art3: { court: 'art. 3', texte: "Il doit être installé autant de compteurs que nécessaire afin de mesurer la consommation de l'eau de l'ensemble des établissements situés dans un immeuble, à l'exception du volume d'eau nécessaire à la protection incendie. Cette exigence s'applique également à un branchement d'eau temporaire." },
+    art4: { court: 'art. 4', texte: "Malgré l'article 3, il peut être installé un seul compteur sur chaque entrée d'eau d'un bâtiment, lorsque l'installation d'une tuyauterie de distribution séparée et distincte, afin de mesurer la consommation de l'eau de l'ensemble des établissements, nécessite des travaux de plomberie dans une pièce autre que celle où se trouve l'entrée d'eau dans le bâtiment." },
+    art5: { court: 'art. 5', texte: "Lorsque la section privée d'un branchement d'eau compte plus de 5 joints souterrains, le propriétaire doit : 1° nouveau branchement : construire une chambre de compteur à l'endroit indiqué par l'autorité compétente, conforme à l'annexe B ; 2° branchement existant : a) construire une chambre de compteur, ou b) aviser l'autorité de l'absence de chambre et lui transmettre chaque année le rapport d'une firme spécialisée en détection de fuite ; en cas de fuite, échéancier et travaux dans les 180 jours ; à défaut, obligation de construire la chambre. Une pièce de raccord (union, coude, T) sur la partie privée constitue un seul joint." },
+    art6: { court: 'art. 6', texte: "L'article 5 ne s'applique pas à un branchement d'eau constitué de tuyaux en cuivre de type K et de pièces de raccord en cuivre dont tous les joints sont soudés à l'argent." },
+    art7: { court: 'art. 7', texte: "Dans les cas visés à l'article 5, lorsqu'un branchement d'eau est combiné, la tuyauterie alimentant l'eau destinée à la protection incendie doit être séparée de celle destinée aux autres besoins de l'immeuble. Cette séparation doit se faire dans la chambre de compteur." },
+    art8: { court: 'art. 8', texte: "Malgré l'article 3, lorsqu'une chambre de compteur doit être installée et que le branchement dessert plusieurs bâtiments, propriété d'un seul propriétaire ou constituant une seule unité d'évaluation, il peut être installé un seul compteur pour l'ensemble des bâtiments en autant qu'aucun usage résidentiel n'est exercé dans l'un ou l'autre des bâtiments. L'autorité compétente peut exiger l'installation de compteurs afin de mesurer la consommation résidentielle." },
+    art8_01: { court: 'art. 8.01', texte: "Malgré les articles 3 et 7, lorsqu'une chambre de compteur(s) doit être installée et que le branchement est un branchement combiné desservant plusieurs bâtiments, propriété d'un seul propriétaire ou constituant une seule unité d'évaluation, il peut être installé un seul compteur pour l'ensemble des bâtiments." },
+    art8_1: { court: 'art. 8.1', texte: "Malgré l'article 5, lorsqu'un réseau de distribution d'eau potable privé se situe sur un lot et que ce réseau a deux branchements ou plus raccordés à l'aqueduc, le propriétaire doit installer des clapets de retenue simple ou un dispositif anti-refoulement sur chacun des branchements, conformément à l'annexe B, dans une chambre de compteur(s) construite à l'endroit indiqué par l'autorité compétente." },
+    art9_al1: { court: 'art. 9 al. 1', texte: "Préalablement à l'installation ou au remplacement d'un compteur, le propriétaire prépare l'endroit déterminé dans les délais fixés par l'autorité compétente. Une fois les travaux terminés, il transmet la fiche d'auto-inspection prévue à l'annexe E." },
+    art9_al2: { court: 'art. 9 al. 2', texte: "Le propriétaire fournit et installe à ses frais la tuyauterie nécessaire et, lorsque requis en vertu de l'article 5, construit la chambre de compteur ; il prend les mesures pour prévenir les dommages dus à une interruption de service." },
+    art9_al5: { court: 'art. 9 al. 5', texte: "Les travaux de préparation de tuyauterie doivent inclure l'installation d'un dispositif antirefoulement conformément aux normes applicables." },
+    art9_al6: { court: 'art. 9 al. 6', texte: "La tuyauterie, incluant si nécessaire une chambre de compteur, doit être installée conformément aux normes techniques de l'annexe B. L'autorité compétente peut autoriser une adaptation en raison de circonstances exceptionnelles, aux frais du propriétaire." },
+    art11: { court: 'art. 11', texte: "Le propriétaire d'un immeuble dont l'usage correspond à l'un de ceux énumérés à l'annexe G et qui est alimenté par un branchement de 40 mm et moins peut installer une dérivation conformément à l'annexe B. La vanne d'arrêt de la dérivation est scellée par l'autorité compétente et tenue fermée en tout temps, sauf lors de l'entretien ou du remplacement du compteur." },
+    art12_al2: { court: 'art. 12 al. 2', texte: "Compteur en chambre : alimentation fournie dans un panneau électrique à l'extérieur de la chambre, verrouillable, facilement accessible, à 1,5 m au-dessus du sol, à 20 m maximum de la chambre ; conduit de 50 mm ; panneau résistant aux intempéries, 0 à 50 °C ; espace libre 300 × 300 × 200 mm ; usage exclusif de l'autorité compétente." },
+    art13: { court: 'art. 13', texte: "La consommation qui ne peut être mesurée en raison du défaut de permettre les travaux est réputée égale, pendant la période visée, à la consommation maximale ininterrompue calculée en fonction du diamètre de l'entrée d'eau desservant l'eau domestique et d'une vitesse de 3 m/s, tel que spécifié à l'annexe C. Si le diamètre est inconnu, le plus petit diamètre de l'annexe C est utilisé." },
+    art15: { court: 'art. 15', texte: "Le propriétaire protège à ses frais le compteur et la tuyauterie contre le gel et s'assure que la chambre de compteur est en tout temps drainée, facile d'accès et en bon état." },
+    art21: { court: 'art. 21', texte: "Le propriétaire maintient l'emplacement ou la chambre du compteur libre d'accès pour l'autorité compétente." },
+    annB_001: { court: 'ann. B, croquis 001', texte: 'Annexe B — croquis 001 : préparation de tuyauterie pour un diamètre de 20 mm (3/4 po) à 50 mm (2 po).' },
+    annB_002: { court: 'ann. B, croquis 002', texte: 'Annexe B — croquis 002 : préparation de tuyauterie pour un diamètre de 50 mm (2 po) à 150 mm (6 po).' },
+    annB_003: { court: 'ann. B, croquis 003', texte: 'Annexe B — croquis 003 : préparation de tuyauterie pour un diamètre de 200 mm (8 po) à 300 mm (12 po).' },
+    annB_notes: { court: 'ann. B, notes', texte: 'Annexe B — notes générales des croquis 001 à 003 (point d\'installation, emplacement, installation).' },
+    annB_chambre: { court: 'ann. B, croquis 004-006', texte: 'Annexe B — croquis 004 (chambre, eau potable), 005 (chambre, protection incendie, détection de fuite) et 006 (chambre, branchement combiné).' },
+    annC: { court: 'ann. C', texte: 'Annexe C — Consommation réputée maximale (révision 2) : consommation journalière maximale (m³/jour) selon le diamètre nominal de la conduite.' },
+    annD_17: { court: 'ann. D, § 1.7', texte: "Point d'installation : endroit sur la conduite d'eau où le compteur sera installé. Le compteur ne doit mesurer que la consommation d'eau potable I.C.I., et non la consommation résidentielle ou l'eau de protection incendie." },
+    annE: { court: 'ann. E', texte: 'Annexe E — Fiche auto-inspection (révision 7), transmise à l\'autorité compétente une fois les travaux terminés (art. 9 al. 1).' },
+    annG: { court: 'ann. G', texte: 'Annexe G — Types d\'usage autorisés pour une voie de dérivation (révision 2).' },
     annD: { court: 'ann. D', texte: 'Annexe D — Questionnaire : fiche d\'information (révision 6).' },
     annD_13: { court: 'ann. D, § 1.3', texte: 'Annexe D, § 1.3 — Usages du bâtiment : vocation I.C.I. (industrielle, commerciale, institutionnelle) ; nombre d\'unités de logement ; salle de spectacle, théâtre, cinéma, école, stade, centre sportif, aréna, hôtel ou motel.' }
   };
@@ -342,6 +499,10 @@ tr.propose td { background: var(--ok-fond); }
     TABLEAU_12: TABLEAU_12,
     TABLEAU_13: TABLEAU_13,
     ANNEXE_I: ANNEXE_I,
+    ANNEXE_B: ANNEXE_B,
+    ANNEXE_C: ANNEXE_C,
+    ANNEXE_G: ANNEXE_G,
+    ARTICLE_12: ARTICLE_12,
     REFS: REFS
   };
 
@@ -667,6 +828,208 @@ tr.propose td { background: var(--ok-fond); }
 </script>
   <script>
 /*
+ * Calculs des modules 4 à 7, par branchement : chambre (art. 5 à 7, 8.1), comptage (art. 3, 4, 8, 8.01),
+ * préparation et installation (art. 9, 11, 12, annexes B et G), consommation réputée (art. 13, annexe C).
+ * Fonctions pures, testées par tests/calculs.test.js.
+ * Réponses tri-état : 'oui' | 'non' | '' (non renseigné).
+ */
+(function (root) {
+  'use strict';
+
+  var RCG = (typeof module !== 'undefined' && module.exports) ? require('./reglement.js') : root.RCG;
+
+  function entier(v) {
+    var n = parseInt(v, 10);
+    return isFinite(n) && n >= 0 ? n : null;
+  }
+
+  function croquisChambre(type) {
+    return RCG.ANNEXE_B.croquisChambre[type === 'combine' ? 'combine' : type === 'incendie' ? 'incendie' : 'potable'];
+  }
+
+  // Module 5 — chambre de compteur.
+  // immeuble.reseauPrive : réseau de distribution privé sur le lot ; nbBranchements : branchements du projet.
+  function evaluerChambre(b, immeuble, nbBranchements) {
+    var motifs = [], options = [];
+    var res = { statut: null, motifs: motifs, options: options, croquis: croquisChambre(b.type), separationIncendie: false };
+    var joints = entier(b.joints);
+
+    // Art. 8.1 : réseau privé avec 2 branchements ou plus — chambre avec clapets, malgré l'art. 5.
+    if (immeuble && immeuble.reseauPrive === 'oui' && nbBranchements >= 2) {
+      res.statut = 'requise';
+      motifs.push({ texte: 'Réseau de distribution privé sur le lot avec ' + nbBranchements + ' branchements raccordés à l\'aqueduc : clapets de retenue simple ou dispositif antirefoulement sur chaque branchement, dans une chambre construite à l\'endroit indiqué par l\'autorité compétente.', ref: 'art8_1' });
+    }
+
+    if (b.cuivreKArgent === 'oui') {
+      motifs.push({ texte: 'Cuivre de type K, raccords en cuivre soudés à l\'argent : l\'article 5 ne s\'applique pas.', ref: 'art6' });
+      if (!res.statut) res.statut = 'non_requise';
+    } else if (joints == null) {
+      if (!res.statut) res.statut = 'a_confirmer';
+      motifs.push({ texte: 'Nombre de joints souterrains de la section privée non renseigné (union, coude ou T = un joint).', ref: 'art5' });
+    } else if (joints > 5) {
+      motifs.push({ texte: joints + ' joints souterrains sur la section privée (> 5).', ref: 'art5' });
+      if (b.neuf === 'nouveau') {
+        res.statut = 'requise';
+        motifs.push({ texte: 'Nouveau branchement : construire une chambre de compteur à l\'endroit indiqué par l\'autorité compétente.', ref: 'art5' });
+      } else if (res.statut !== 'requise') {
+        res.statut = 'option';
+        options.push({ texte: 'a) Construire une chambre de compteur à l\'endroit indiqué dans l\'avis de l\'autorité compétente.', ref: 'art5' });
+        options.push({ texte: 'b) Aviser l\'autorité de l\'absence de chambre et transmettre chaque année le rapport d\'une firme de détection de fuite ; en cas de fuite : échéancier, travaux dans les 180 jours ; à défaut, obligation de construire la chambre.', ref: 'art5' });
+      }
+    } else {
+      motifs.push({ texte: joints + ' joint(s) souterrain(s) sur la section privée (≤ 5) : l\'article 5 ne s\'applique pas.', ref: 'art5' });
+      if (!res.statut) res.statut = 'non_requise';
+    }
+
+    if (b.type === 'combine' && (res.statut === 'requise' || res.statut === 'option')) {
+      res.separationIncendie = true;
+      motifs.push({ texte: 'Branchement combiné : la tuyauterie de protection incendie est séparée de celle des autres besoins, dans la chambre de compteur.', ref: 'art7' });
+    }
+    return res;
+  }
+
+  // Module 4 — nombre et emplacement des compteurs pour un branchement.
+  function evaluerComptage(b, chambre, partieResidentielle) {
+    var motifs = [], points = [];
+    var res = { statut: null, motifs: motifs, points: points, unSeulCompteurBatiments: false };
+
+    if (b.type === 'incendie') {
+      res.statut = 'aucun';
+      motifs.push({ texte: 'Branchement de protection incendie : le volume d\'eau de protection incendie n\'est pas mesuré.', ref: 'art3' });
+      return res;
+    }
+    if (b.dessertEtablissements === 'non') {
+      res.statut = 'aucun';
+      motifs.push({ texte: 'Aucun établissement (usage non résidentiel) desservi : aucun compteur de consommation I.C.I. sur ce branchement — à confirmer avec l\'autorité compétente.', ref: 'art3', aConfirmer: true });
+      return res;
+    }
+    if (b.dessertEtablissements !== 'oui') {
+      res.statut = 'a_confirmer';
+      motifs.push({ texte: 'Indiquer si le branchement dessert des établissements.', ref: 'art3' });
+      return res;
+    }
+
+    res.statut = 'requis';
+    motifs.push({ texte: 'Compteur(s) requis pour mesurer la consommation de l\'ensemble des établissements desservis' + (b.temporaire === 'oui' ? ' (s\'applique aussi au branchement temporaire)' : '') + '.', ref: 'art3' });
+    if (b.type === 'combine') motifs.push({ texte: 'Branchement combiné : le compteur est installé sur la conduite d\'eau potable, après la séparation de la protection incendie.', ref: 'annB_notes' });
+
+    var residentiel = b.dessertResidentiel === 'oui';
+    if (residentiel && b.separationAutrePiece === 'oui') {
+      points.push('Un seul compteur sur l\'entrée d\'eau (mesure aussi la partie résidentielle)');
+      motifs.push({ texte: 'La séparation de la tuyauterie des établissements exigerait des travaux dans une autre pièce que celle de l\'entrée d\'eau : un seul compteur peut être installé sur l\'entrée d\'eau.', ref: 'art4' });
+    } else if (residentiel) {
+      points.push('Compteur sur la tuyauterie distincte desservant les établissements');
+      motifs.push({ texte: 'Le compteur mesure seulement la consommation I.C.I. ; un branchement purement résidentiel peut se trouver en amont du compteur.', ref: 'annD_17' });
+      if (b.separationAutrePiece !== 'non') motifs.push({ texte: 'Préciser si la séparation exigerait des travaux dans une autre pièce (art. 4).', ref: 'art4', aConfirmer: true });
+    } else {
+      points.push('Compteur sur l\'entrée d\'eau');
+    }
+
+    var nbBat = entier(b.nbBatiments) || 1;
+    if (nbBat > 1) {
+      var chambreRequise = chambre && chambre.statut === 'requise';
+      if (!chambreRequise) {
+        motifs.push({ texte: nbBat + ' bâtiments desservis, mais aucune chambre requise : les articles 8 et 8.01 ne s\'appliquent pas.', ref: 'art8' });
+      } else if (b.memeProprietaire !== 'oui') {
+        motifs.push({ texte: 'Bâtiments de propriétaires ou d\'unités d\'évaluation différents : les articles 8 et 8.01 ne s\'appliquent pas.', ref: 'art8' });
+      } else if (b.type === 'combine') {
+        res.unSeulCompteurBatiments = true;
+        motifs.push({ texte: 'Chambre requise, branchement combiné, ' + nbBat + ' bâtiments d\'un seul propriétaire : un seul compteur possible pour l\'ensemble des bâtiments.', ref: 'art8_01' });
+      } else if (!residentiel && partieResidentielle !== 'oui') {
+        res.unSeulCompteurBatiments = true;
+        motifs.push({ texte: 'Chambre requise, ' + nbBat + ' bâtiments d\'un seul propriétaire, sans usage résidentiel : un seul compteur possible pour l\'ensemble des bâtiments.', ref: 'art8' });
+      } else {
+        motifs.push({ texte: 'Usage résidentiel dans un des bâtiments : l\'article 8 ne permet pas un seul compteur ; l\'autorité peut exiger des compteurs pour la consommation résidentielle.', ref: 'art8' });
+      }
+    }
+    if (chambre && (chambre.statut === 'requise' || chambre.statut === 'option')) {
+      points.push(chambre.statut === 'requise' ? 'Compteur dans la chambre de compteur' : 'Compteur dans la chambre si l\'option a) est retenue');
+    }
+    return res;
+  }
+
+  // Module 6 — préparation de tuyauterie selon le diamètre (annexe B).
+  function preparationTuyauterie(d) {
+    d = Number(d);
+    var B = RCG.ANNEXE_B, res = [];
+    [['croquis001', 'annB_001'], ['croquis002', 'annB_002'], ['croquis003', 'annB_003']].forEach(function (c) {
+      var ligne = B[c[0]].lignes.filter(function (l) { return l.d === d; })[0];
+      if (ligne) res.push({ croquis: c[0], ref: c[1], titre: B[c[0]].titre, ligne: ligne, robinets: B[c[0]].robinets, derivation: B[c[0]].derivation });
+    });
+    return res;
+  }
+
+  // Module 6 — dérivation (art. 11 + annexe B, note A7).
+  function evaluerDerivation(diamPrep, diamBranchement, codeG) {
+    var preps = preparationTuyauterie(diamPrep), motifs = [];
+    var croquis = preps.map(function (p) { return p.croquis; });
+    var usageG = RCG.ANNEXE_G.filter(function (g) { return g.code === codeG; })[0];
+    var art11 = !!usageG && Number(diamBranchement) > 0 && Number(diamBranchement) <= 40;
+    if (!preps.length) return { statut: 'a_confirmer', motifs: [{ texte: 'Diamètre de préparation non prévu à l\'annexe B.', ref: 'annB_notes' }] };
+
+    var obligatoire = croquis.indexOf('croquis002') > -1 || croquis.indexOf('croquis003') > -1;
+    var sous001 = croquis.indexOf('croquis001') > -1;
+    var statut;
+    if (obligatoire && sous001) {
+      statut = 'a_confirmer';
+      motifs.push({ texte: '50 mm figure aux croquis 001 (dérivation interdite sauf art. 11) et 002 (dérivation permanente obligatoire) : croquis applicable à confirmer avec l\'autorité compétente.', ref: 'annB_002', aConfirmer: true });
+    } else if (obligatoire) {
+      statut = 'obligatoire';
+      motifs.push({ texte: 'Voie de dérivation permanente obligatoire, parallèle au compteur ; robinet scellé fermé par la Ville.', ref: preps[0].ref });
+    } else if (art11) {
+      statut = 'permise';
+      motifs.push({ texte: 'Usage ' + usageG.code + ' (' + usageG.libelle + ') listé à l\'annexe G et branchement de ' + diamBranchement + ' mm (≤ 40 mm) : dérivation permise.', ref: 'art11' });
+      motifs.push({ texte: 'Vanne d\'arrêt de la dérivation scellée par l\'autorité compétente, tenue fermée sauf entretien ou remplacement du compteur.', ref: 'art11' });
+    } else {
+      statut = 'interdite';
+      motifs.push({ texte: usageG ? 'Branchement de plus de 40 mm : l\'article 11 ne s\'applique pas.' : 'Usage non listé à l\'annexe G : l\'article 11 ne s\'applique pas.', ref: usageG ? 'art11' : 'annG' });
+      motifs.push({ texte: 'Voies de dérivation interdites, sauf pour les immeubles visés par l\'article 11.', ref: 'annB_001' });
+    }
+    return { statut: statut, motifs: motifs };
+  }
+
+  // Module 6 — alimentation électrique (art. 12).
+  function evaluerElectrique(typeCompteur, diamMm, alimentation120, chambreRequise) {
+    var A = RCG.ARTICLE_12;
+    if (typeCompteur !== 'electromagnetique' || !(Number(diamMm) >= 50)) {
+      return { statut: 'non_applicable', exigences: [] };
+    }
+    if (alimentation120 === 'non') return { statut: 'non_applicable', exigences: [], note: 'Compteur électromagnétique sans alimentation 120 V (ex. à pile).' };
+    if (alimentation120 !== 'oui') return { statut: 'a_confirmer', exigences: [], note: 'Préciser si le compteur est muni d\'une alimentation 120 V.' };
+    var ex = [{ texte: A.general, ref: 'art12' }];
+    if (chambreRequise) A.chambre.forEach(function (t) { ex.push({ texte: t, ref: 'art12_al2' }); });
+    else ex.push({ texte: A.horsChambre, ref: 'annB_002' });
+    return { statut: 'applicable', exigences: ex };
+  }
+
+  // Module 7 — consommation réputée (art. 13, annexe C).
+  function consommationReputee(diamMm) {
+    var C = RCG.ANNEXE_C;
+    if (diamMm === '' || diamMm == null || diamMm === 'inconnu') {
+      return { couvert: true, ligne: C[0], m3j: C[0].m3j, motif: 'Diamètre inconnu : le plus petit diamètre de l\'annexe C est utilisé.' };
+    }
+    var d = Number(diamMm);
+    if (d <= 20) return { couvert: true, ligne: C[0], m3j: C[0].m3j };
+    var ligne = C.filter(function (l) { return l.d === d; })[0];
+    if (!ligne) return { couvert: false, motif: 'Diamètre de ' + d + ' mm absent du tableau de l\'annexe C : non couvert — à confirmer avec l\'autorité compétente.' };
+    return { couvert: true, ligne: ligne, m3j: ligne.m3j };
+  }
+
+  var api = {
+    evaluerChambre: evaluerChambre,
+    evaluerComptage: evaluerComptage,
+    preparationTuyauterie: preparationTuyauterie,
+    evaluerDerivation: evaluerDerivation,
+    evaluerElectrique: evaluerElectrique,
+    consommationReputee: consommationReputee
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.CalculsB = api;
+})(this);
+</script>
+  <script>
+/*
  * Jeu de données d'exemple — immeuble mixte FICTIF (voir docs/jeu_exemple.md pour les résultats attendus).
  * Les branchements serviront aux modules 4 à 7.
  */
@@ -710,10 +1073,24 @@ tr.propose td { background: var(--ok-fond); }
       pressionRequiseKpa: 350,
       technologie: ''
     },
+    // Modules 4 à 7.
+    immeuble: { reseauPrive: 'non', codeUsageG: '' },
     branchements: [
-      { id: 'B1', type: 'Potable', diametreMm: 50, materiau: 'Cuivre' },
-      { id: 'B2', type: 'Combiné', diametreMm: 150, materiau: 'Fonte' }
-    ]
+      {
+        id: 'B1', nom: 'B1 — logements', type: 'potable', temporaire: 'non', diametreMm: 50, materiau: 'Cuivre',
+        neuf: 'existant', joints: 3, cuivreKArgent: 'non', nbBatiments: 1, memeProprietaire: 'oui',
+        dessertEtablissements: 'non', dessertResidentiel: 'oui', separationAutrePiece: '',
+        diametrePreparationMm: '', typeCompteur: '', alimentation120: ''
+      },
+      {
+        id: 'B2', nom: 'B2 — commerces et gicleurs', type: 'combine', temporaire: 'non', diametreMm: 100, materiau: 'Fonte',
+        neuf: 'existant', joints: 8, cuivreKArgent: 'non', nbBatiments: 1, memeProprietaire: 'oui',
+        dessertEtablissements: 'oui', dessertResidentiel: 'non', separationAutrePiece: '',
+        diametrePreparationMm: 25, typeCompteur: 'volumetrique', alimentation120: ''
+      }
+    ],
+    // Module 7 — période et tarif FICTIFS saisis par l'usager.
+    consommation: { diametreMm: 50, jours: 30, tarif: '' }
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = EXEMPLE;
@@ -721,7 +1098,7 @@ tr.propose td { background: var(--ok-fond); }
 })(this);
 </script>
   <script>
-/* Interface — modules 1 et 2. Dépend de RCG (reglement.js), Calculs (calculs.js), EXEMPLE (exemple.js). */
+/* Interface — modules 1 à 7. Dépend de RCG, CompteursDB, Calculs, CalculsB et EXEMPLE. */
 (function () {
   'use strict';
 
@@ -732,10 +1109,10 @@ tr.propose td { background: var(--ok-fond); }
     { id: 'm1', titre: '1. Admissibilité', actif: true },
     { id: 'm2', titre: '2. Demande de pointe', actif: true },
     { id: 'm3', titre: '3. Sélection du compteur', actif: true },
-    { id: 'm4', titre: '4. Nombre et emplacement', actif: false },
-    { id: 'm5', titre: '5. Chambre de compteur', actif: false },
-    { id: 'm6', titre: '6. Préparation et installation', actif: false },
-    { id: 'm7', titre: '7. Consommation réputée', actif: false }
+    { id: 'm4', titre: '4. Nombre et emplacement', actif: true },
+    { id: 'm5', titre: '5. Chambre de compteur', actif: true },
+    { id: 'm6', titre: '6. Préparation et installation', actif: true },
+    { id: 'm7', titre: '7. Consommation réputée', actif: true }
   ];
 
   function projetVide() {
@@ -743,8 +1120,30 @@ tr.propose td { background: var(--ok-fond); }
       projet: { nom: '', adresse: '', arrondissement: '' },
       admissibilite: { usage: '', critere1: '', critere2: '', critere3: '', aucunBranchement: '', partieResidentielle: '', nbLogements: '' },
       etablissements: [{ id: nouvelId(), nom: 'Établissement 1', usageCas1: '', quantites: {} }],
-      selection: selectionVide()
+      selection: selectionVide(),
+      immeuble: { reseauPrive: '', codeUsageG: '' },
+      branchements: [branchementVide(1)],
+      consommation: { diametreMm: '', jours: '', tarif: '' },
+      autoInspection: {}
     };
+  }
+
+  function branchementVide(n) {
+    return {
+      id: 'b' + Math.random().toString(36).slice(2, 9), nom: 'Branchement ' + n, type: 'potable', temporaire: 'non', diametreMm: '', materiau: '',
+      neuf: 'existant', joints: '', cuivreKArgent: '', nbBatiments: 1, memeProprietaire: '', dessertEtablissements: '', dessertResidentiel: '',
+      separationAutrePiece: '', diametrePreparationMm: '', typeCompteur: '', alimentation120: ''
+    };
+  }
+
+  // Complète un projet enregistré par une version antérieure de l'outil.
+  function normaliser(o) {
+    if (!o.selection) o.selection = selectionVide();
+    if (!o.immeuble) o.immeuble = { reseauPrive: '', codeUsageG: '' };
+    if (!Array.isArray(o.branchements) || !o.branchements.length || o.branchements[0].neuf === undefined) o.branchements = [branchementVide(1)];
+    if (!o.consommation) o.consommation = { diametreMm: '', jours: '', tarif: '' };
+    if (!o.autoInspection) o.autoInspection = {};
+    return o;
   }
 
   function selectionVide() {
@@ -754,8 +1153,7 @@ tr.propose td { background: var(--ok-fond); }
   function nouvelId() { return 'e' + Math.random().toString(36).slice(2, 9); }
   function copie(o) { return JSON.parse(JSON.stringify(o)); }
 
-  var etat = charger() || copie(EXEMPLE);
-  if (!etat.selection) etat.selection = selectionVide();
+  var etat = normaliser(charger() || copie(EXEMPLE));
   var ongletActif = 'm1';
 
   function charger() {
@@ -806,8 +1204,10 @@ tr.propose td { background: var(--ok-fond); }
     if (m.id === 'm1') main.innerHTML = vueModule1();
     else if (m.id === 'm2') main.innerHTML = vueModule2();
     else if (m.id === 'm3') main.innerHTML = vueModule3();
-    else main.innerHTML = '<section class="carte"><h2>' + esc(m.titre) + '</h2><p>Module à venir, dans l\'ordre de la spécification (1 → 7).</p>' +
-      (m.attente ? '<p>' + aConfirmer(m.attente) + ' ' + esc(m.attente) + '. ' + ref('art9_al3') + '</p>' : '') + '</section>';
+    else if (m.id === 'm4') main.innerHTML = vueModule4();
+    else if (m.id === 'm5') main.innerHTML = vueModule5();
+    else if (m.id === 'm6') main.innerHTML = vueModule6();
+    else if (m.id === 'm7') main.innerHTML = vueModule7();
     majResultats();
   }
 
@@ -986,6 +1386,8 @@ tr.propose td { background: var(--ok-fond); }
     majModule1(d);
     majModule2(d);
     majModule3(d);
+    majBranchements();
+    majModule7();
     var titre = document.getElementById('titre-projet');
     if (titre) titre.textContent = etat.projet.nom || 'Projet sans nom';
   }
@@ -1141,6 +1543,339 @@ tr.propose td { background: var(--ok-fond); }
       '<p class="aide">Courbes reconstituées à partir des points lus sur les graphiques des fiches fabricants (≈ ±0,2 psi) — à confirmer.</p>';
   }
 
+  // ---------- modules 4 à 7 : branchements ----------
+  var TYPES_BR = [['potable', 'Eau potable'], ['incendie', 'Protection incendie'], ['combine', 'Combiné (incendie + autres besoins)']];
+  var MATERIAUX = ['Acier galvanisé', 'Cuivre', 'CPVC', 'Fonte', 'Plomb', 'Autre'];
+  var DIAM_BR = [20, 25, 40, 50, 75, 80, 100, 150, 200, 250, 300, 350];
+  var TYPES_CPT = [['', '— choisir —'], ['volumetrique', 'Volumétrique / mécanique'], ['electromagnetique', 'Électromagnétique'], ['ultrasonique', 'Ultrasonique']];
+
+  function brDe(el) {
+    var c = el.closest('[data-br]');
+    var id = c && c.getAttribute('data-br');
+    return etat.branchements.filter(function (b) { return b.id === id; })[0];
+  }
+
+  function brSelect(b, champ, libelle, opts, refCle) {
+    return '<label class="champ">' + esc(libelle) + (refCle ? ' ' + ref(refCle) : '') + '<select data-br-champ="' + champ + '">' + opts.map(function (o) {
+      var v = Array.isArray(o) ? o[0] : o, l = Array.isArray(o) ? o[1] : o;
+      return '<option value="' + esc(v) + '"' + (String(b[champ]) === String(v) ? ' selected' : '') + '>' + esc(l) + '</option>';
+    }).join('') + '</select></label>';
+  }
+  function brNombre(b, champ, libelle, refCle) {
+    return '<label class="champ">' + esc(libelle) + (refCle ? ' ' + ref(refCle) : '') + '<input type="number" min="0" step="1" data-br-champ="' + champ + '" value="' + esc(b[champ]) + '"></label>';
+  }
+  function brOuiNon(b, champ, libelle, refCle) {
+    var v = b[champ] || '';
+    return '<fieldset class="tri"><legend>' + esc(libelle) + (refCle ? ' ' + ref(refCle) : '') + '</legend>' + [['oui', 'Oui'], ['non', 'Non']].map(function (o) {
+      return '<label><input type="radio" name="' + b.id + '-' + champ + '" data-br-champ="' + champ + '" value="' + o[0] + '"' + (v === o[0] ? ' checked' : '') + '> ' + o[1] + '</label>';
+    }).join('') + '</fieldset>';
+  }
+  function diamOpts(liste) {
+    return [['', '— mm —']].concat(liste.map(function (d) { return [d, d + ' mm']; }));
+  }
+  function libelleType(t) { return TYPES_BR.filter(function (x) { return x[0] === t; })[0][1]; }
+
+  function evaluations(b) {
+    var ch = CalculsB.evaluerChambre(b, etat.immeuble, etat.branchements.length);
+    var co = CalculsB.evaluerComptage(b, ch, etat.admissibilite.partieResidentielle);
+    return { chambre: ch, comptage: co };
+  }
+
+  var STATUTS_CHAMBRE = {
+    requise: ['Chambre requise', 'err'], option: ['Chambre ou rapport annuel de détection de fuite', 'warn'],
+    non_requise: ['Chambre non requise', 'ok'], a_confirmer: ['À confirmer', 'warn']
+  };
+  var STATUTS_COMPTAGE = {
+    requis: ['Compteur requis', 'err'], aucun: ['Aucun compteur de consommation', 'ok'], a_confirmer: ['À confirmer', 'warn']
+  };
+
+  function listeMotifs(motifs) {
+    return '<ul class="motifs">' + motifs.map(function (m) {
+      return '<li>' + esc(m.texte) + ' ' + ref(m.ref) + (m.aConfirmer ? ' ' + aConfirmer(m.texte) : '') + '</li>';
+    }).join('') + '</ul>';
+  }
+
+  // Schéma de comptage : du réseau de la Ville jusqu'aux usages desservis.
+  function schema(b, ev) {
+    var e = [], ch = ev.chambre, co = ev.comptage;
+    e.push(['reseau', 'Aqueduc (Ville)']);
+    if (ch.statut === 'requise' || ch.statut === 'option') e.push(['chambre', 'Chambre ' + ch.croquis.code + (ch.statut === 'option' ? ' (option a)' : '')]);
+    if (b.type === 'incendie') {
+      e.push(['incendie', 'Protection incendie — non mesurée']);
+    } else {
+      if (b.type === 'combine') e.push(['incendie', 'Dérivation incendie (non mesurée)']);
+      if (co.statut === 'requis') {
+        if (b.dessertResidentiel === 'oui' && b.separationAutrePiece !== 'oui') e.push(['residentiel', 'Résidentiel en amont (non mesuré)']);
+        e.push(['compteur', 'Compteur' + (b.diametrePreparationMm ? ' ' + b.diametrePreparationMm + ' mm' : '')]);
+        e.push(['dar', 'Dispositif antirefoulement']);
+        e.push(['usage', b.dessertResidentiel === 'oui' && b.separationAutrePiece === 'oui' ? 'Établissements + logements' : 'Établissements']);
+      } else {
+        e.push(['usage', b.dessertResidentiel === 'oui' ? 'Logements (non mesurés)' : 'Usages desservis']);
+      }
+    }
+    return '<ol class="schema" aria-label="Schéma de comptage">' + e.map(function (x) {
+      return '<li class="noeud noeud-' + x[0] + '">' + esc(x[1]) + '</li>';
+    }).join('') + '</ol>';
+  }
+
+  function vueModule4() {
+    var h = '<section class="carte"><h2>Branchements du projet ' + ref('annD') + '</h2>' +
+      '<p class="aide">Un branchement est une conduite raccordée directement au réseau de la Ville, sans passer par un autre bâtiment (annexe D, § 1.5). Les compteurs mesurent la consommation des établissements, sauf l\'eau de protection incendie ' + ref('art3') + '.</p>' +
+      '<fieldset class="tri"><legend>Réseau de distribution d\'eau potable privé sur le lot (plusieurs branchements raccordés à l\'aqueduc) ' + ref('art8_1') + '</legend>' +
+      [['oui', 'Oui'], ['non', 'Non']].map(function (o) {
+        return '<label><input type="radio" name="reseauPrive" data-champ="immeuble.reseauPrive" value="' + o[0] + '"' + (etat.immeuble.reseauPrive === o[0] ? ' checked' : '') + '> ' + o[1] + '</label>';
+      }).join('') + '</fieldset></section>';
+    h += etat.branchements.map(function (b) {
+      return '<section class="carte" data-br="' + b.id + '"><div class="etab-tete">' +
+        '<label class="champ">Nom<input type="text" data-br-champ="nom" value="' + esc(b.nom) + '"></label>' +
+        brSelect(b, 'type', 'Type', TYPES_BR) +
+        brSelect(b, 'diametreMm', 'Diamètre', diamOpts(DIAM_BR)) +
+        brSelect(b, 'materiau', 'Matériau', [['', '— choisir —']].concat(MATERIAUX)) +
+        brSelect(b, 'neuf', 'Branchement', [['existant', 'Existant'], ['nouveau', 'Nouveau']], 'art5') +
+        (etat.branchements.length > 1 ? '<button class="btn btn-sec" data-action="retirer-br">Retirer</button>' : '') + '</div>' +
+        '<div class="colonnes"><div>' +
+        brOuiNon(b, 'dessertEtablissements', 'Dessert des établissements (usage non résidentiel)', 'art3') +
+        brOuiNon(b, 'dessertResidentiel', 'Dessert aussi des logements', 'annD_17') +
+        brOuiNon(b, 'separationAutrePiece', 'Séparer la tuyauterie des établissements exigerait des travaux dans une autre pièce que celle de l\'entrée d\'eau', 'art4') +
+        brOuiNon(b, 'temporaire', 'Branchement temporaire', 'art3') +
+        '<div class="grille">' + brNombre(b, 'nbBatiments', 'Bâtiments desservis', 'art8') + '</div>' +
+        brOuiNon(b, 'memeProprietaire', 'Bâtiments d\'un seul propriétaire ou d\'une seule unité d\'évaluation', 'art8') +
+        '</div><div class="resultat" id="m4-' + b.id + '"></div></div></section>';
+    }).join('');
+    h += '<div class="actions"><button class="btn" data-action="ajouter-br">+ Ajouter un branchement</button></div>';
+    h += '<section class="carte"><h2>Règles d\'emplacement du compteur ' + ref('annB_notes') + '</h2><ul class="motifs">' +
+      RCG.ANNEXE_B.notesInstallation.filter(function (n) { return ['A2', 'A3', 'A4', 'A6'].indexOf(n.code) > -1; })
+        .map(function (n) { return '<li><strong>' + n.code + '</strong> — ' + esc(n.texte) + '</li>'; }).join('') + '</ul></section>';
+    return h;
+  }
+
+  function majModule4(b, ev) {
+    var el = document.getElementById('m4-' + b.id);
+    if (!el) return;
+    var co = ev.comptage, st = STATUTS_COMPTAGE[co.statut], ch = STATUTS_CHAMBRE[ev.chambre.statut];
+    el.innerHTML = '<div class="statut statut-' + st[1] + '"><strong>' + st[0] + '</strong>' +
+      (co.points.length ? '<span>' + co.points.map(esc).join(' · ') + '</span>' : '') +
+      '<span>Chambre : ' + ch[0] + ' (module 5) ' + ref('art5') + '</span></div>' +
+      schema(b, ev) + listeMotifs(co.motifs);
+  }
+
+  function vueModule5() {
+    var h = '<section class="carte"><h2>Exigibilité de la chambre de compteur ' + ref('art5') + '</h2>' +
+      '<p class="aide">Compter les joints souterrains de la section privée du branchement : une pièce de raccord (union, coude, T) compte pour un seul joint ' + ref('art5') + '.</p></section>';
+    h += etat.branchements.map(function (b) {
+      return '<section class="carte" data-br="' + b.id + '"><h2>' + esc(b.nom) + ' <small class="aide">' + esc(libelleType(b.type)) + (b.diametreMm ? ', ' + b.diametreMm + ' mm' : '') + ', ' + (b.neuf === 'nouveau' ? 'nouveau' : 'existant') + '</small></h2>' +
+        '<div class="colonnes"><div>' +
+        '<div class="grille">' + brNombre(b, 'joints', 'Joints souterrains (section privée)', 'art5') + '</div>' +
+        brOuiNon(b, 'cuivreKArgent', 'Tuyaux en cuivre de type K, raccords en cuivre, tous les joints soudés à l\'argent', 'art6') +
+        '</div><div class="resultat" id="m5-' + b.id + '"></div></div></section>';
+    }).join('');
+    h += '<section class="carte" id="m5-normes"></section>';
+    return h;
+  }
+
+  function majModule5(b, ev) {
+    var el = document.getElementById('m5-' + b.id);
+    if (!el) return;
+    var ch = ev.chambre, st = STATUTS_CHAMBRE[ch.statut];
+    var h = '<div class="statut statut-' + st[1] + '"><strong>' + st[0] + '</strong>' +
+      ((ch.statut === 'requise' || ch.statut === 'option') ? '<span>' + esc(ch.croquis.titre) + ' ' + ref('annB_chambre') + '</span>' : '') + '</div>' + listeMotifs(ch.motifs);
+    if (ch.options.length) h += '<h4>Options pour un branchement existant</h4>' + listeMotifs(ch.options);
+    el.innerHTML = h;
+  }
+
+  function majNormesChambre(evs) {
+    var el = document.getElementById('m5-normes');
+    if (!el) return;
+    var concernes = evs.filter(function (x) { return x.ev.chambre.statut === 'requise' || x.ev.chambre.statut === 'option'; });
+    if (!concernes.length) { el.innerHTML = '<h2>Normes techniques de la chambre</h2><p>Aucune chambre requise pour l\'instant.</p>'; return; }
+    el.innerHTML = '<h2>Normes techniques de la chambre ' + ref('annB_chambre') + '</h2><ul class="liste-controle">' +
+      RCG.ANNEXE_B.chambre.map(function (n) {
+        return '<li><span class="case" aria-hidden="true"></span>' + esc(n.texte) + ' <span class="aide">(croquis ' + n.code + ')</span>' + (n.aConfirmer ? ' ' + aConfirmer(n.texte) : '') + '</li>';
+      }).join('') +
+      '<li><span class="case" aria-hidden="true"></span>Chambre drainée, facile d\'accès et en bon état en tout temps ; compteur et tuyauterie protégés contre le gel. ' + ref('art15') + '</li>' +
+      '<li><span class="case" aria-hidden="true"></span>Chambre maintenue libre d\'accès pour l\'autorité compétente. ' + ref('art21') + '</li>' +
+      '</ul><p class="aide">Croquis applicables : ' + concernes.map(function (x) { return esc(x.b.nom) + ' → ' + esc(x.ev.chambre.croquis.titre); }).join(' ; ') + '</p>';
+  }
+
+  function propositionsModule3() {
+    var d = Calculs.calculerDemandePointe(etat.etablissements);
+    var q = demandeSelection(d).q;
+    if (!(q > 0)) return '';
+    var sel = Calculs.selectionnerCompteurs(q, pertePermise(), null);
+    var p = Object.keys(sel.propositions).map(function (k) { var c = sel.propositions[k].compteur; return c.modele + ' ' + c.diametreMm + ' mm'; });
+    return p.length ? 'Propositions du module 3 : ' + p.join(', ') + '.' : '';
+  }
+
+  function vueModule6() {
+    var avecCompteur = etat.branchements.filter(function (b) { return evaluations(b).comptage.statut === 'requis'; });
+    var h = '<section class="carte"><h2>Préparation de l\'emplacement ' + ref('art9_al1') + '</h2>' +
+      '<p>Le propriétaire prépare l\'endroit, fournit et installe à ses frais la tuyauterie ' + ref('art9_al2') + ', y compris un dispositif antirefoulement ' + ref('art9_al5') + ', selon l\'annexe B ' + ref('art9_al6') + ', puis transmet la fiche d\'auto-inspection ' + ref('annE') + '.</p>' +
+      '<label class="champ">Usage de l\'immeuble listé à l\'annexe G (dérivation) ' + ref('annG') + '<select data-champ="immeuble.codeUsageG"><option value="">Aucun usage de l\'annexe G</option>' +
+      RCG.ANNEXE_G.map(function (g) { return '<option value="' + g.code + '"' + (etat.immeuble.codeUsageG === g.code ? ' selected' : '') + '>' + g.code + ' — ' + esc(g.libelle) + '</option>'; }).join('') +
+      '</select></label><p class="aide">' + esc(propositionsModule3()) + '</p></section>';
+    if (!avecCompteur.length) h += '<section class="carte"><p>Aucun branchement avec compteur (module 4).</p></section>';
+    h += avecCompteur.map(function (b) {
+      return '<section class="carte" data-br="' + b.id + '"><h2>' + esc(b.nom) + ' <small class="aide">' + esc(libelleType(b.type)) + (b.diametreMm ? ', branchement ' + b.diametreMm + ' mm' : '') + '</small></h2>' +
+        '<div class="etab-tete">' +
+        brSelect(b, 'diametrePreparationMm', 'Diamètre de la préparation (compteur)', diamOpts(CompteursDB.DIAMETRES_ANNEXE_B), 'annB_notes') +
+        brSelect(b, 'typeCompteur', 'Type de compteur', TYPES_CPT, 'art12') + '</div>' +
+        (b.typeCompteur === 'electromagnetique' ? brOuiNon(b, 'alimentation120', 'Compteur muni d\'une alimentation électrique de 120 V', 'art12') : '') +
+        '<div id="m6-' + b.id + '"></div></section>';
+    }).join('');
+    h += '<section class="carte"><h2>Notes d\'installation communes ' + ref('annB_notes') + '</h2><ul class="liste-controle">' +
+      RCG.ANNEXE_B.notesInstallation.map(function (n) { return '<li><span class="case" aria-hidden="true"></span><strong>' + esc(n.code) + '</strong> — ' + esc(n.texte) + '</li>'; }).join('') + '</ul></section>';
+    h += vueFicheE(avecCompteur);
+    return h;
+  }
+
+  function cote(v) { return v == null ? '—' : fmt(v) + ' mm'; }
+
+  function majModule6(b, ev) {
+    var el = document.getElementById('m6-' + b.id);
+    if (!el) return;
+    if (!b.diametrePreparationMm) { el.innerHTML = '<p class="aide">Choisir le diamètre de la préparation.</p>'; return; }
+    var preps = CalculsB.preparationTuyauterie(b.diametrePreparationMm);
+    var h = '';
+    preps.forEach(function (p) {
+      var l = p.ligne;
+      h += '<h3>' + esc(p.titre) + ' ' + ref(p.ref) + '</h3><div class="defile"><table class="inventaire"><tbody>' +
+        (l.transition ? '<tr><th>Pièce de transition (fournie par la Ville)</th><td>' + cote(l.transition) + ' (' + esc(l.transitionPo) + ' po) · ' + esc(l.raccordTransition) + '</td></tr><tr><th>Raccords de la pièce de transition</th><td>' + esc(l.raccord) + ' ; soudé ou serti ; cuivre ou bronze</td></tr>' : '') +
+        (l.LD ? '<tr><th>Section droite minimale (LD)</th><td>' + cote(l.LD) + '</td></tr>' : '') +
+        (l.LS ? '<tr><th>Pièce de transition (LS)</th><td>' + cote(l.LS) + ' ' + aConfirmer('La note C4 désigne cette longueur « LC », alors que le tableau l\'appelle LS et réserve LC à la longueur du compteur.') + '</td></tr>' : '') +
+        (l.LC ? '<tr><th>' + (l.LS ? 'Longueur du compteur (LC)' : 'Pièce de transition (LC)') + '</th><td>' + cote(l.LC) + '</td></tr>' : '') +
+        (l.LT ? '<tr><th>Té de test (LT) — port d\'essai 50 mm sur le dessus</th><td>' + cote(l.LT) + '</td></tr>' : '') +
+        (l.LP ? '<tr><th>Bride au port d\'essai, minimum (LP)</th><td>' + cote(l.LP) + '</td></tr>' : '') +
+        '<tr><th>Dégagements autour du compteur : dessus A / dessous B / derrière C / devant D</th><td>' + [l.A, l.B, l.C, l.D].map(cote).join(' / ') + '</td></tr>' +
+        '<tr><th>Robinets</th><td>' + esc(p.robinets) + '</td></tr>' +
+        '</tbody></table></div>';
+    });
+    if (!preps.length) h += '<p>' + aConfirmer('Diamètre absent de l\'annexe B') + ' Diamètre non prévu à l\'annexe B.</p>';
+
+    var der = CalculsB.evaluerDerivation(b.diametrePreparationMm, b.diametreMm, etat.immeuble.codeUsageG);
+    var libDer = { obligatoire: ['Dérivation obligatoire', 'warn'], permise: ['Dérivation permise (optionnelle)', 'ok'], interdite: ['Dérivation interdite', 'err'], a_confirmer: ['Dérivation : à confirmer', 'warn'] }[der.statut];
+    h += '<h3>Voie de dérivation ' + ref('art11') + '</h3><div class="statut statut-' + libDer[1] + '"><strong>' + libDer[0] + '</strong></div>' + listeMotifs(der.motifs);
+
+    var chambreRequise = ev.chambre.statut === 'requise';
+    var elec = CalculsB.evaluerElectrique(b.typeCompteur, b.diametrePreparationMm, b.alimentation120, chambreRequise);
+    h += '<h3>Alimentation électrique ' + ref('art12') + '</h3>';
+    if (elec.statut === 'applicable') {
+      h += '<ul class="liste-controle">' + elec.exigences.map(function (x) { return '<li><span class="case" aria-hidden="true"></span>' + esc(x.texte) + ' ' + ref(x.ref) + '</li>'; }).join('') + '</ul>';
+      if (ev.chambre.statut === 'option') h += '<p class="aide">Si la chambre est construite (option a), les exigences du panneau extérieur de l\'article 12 al. 2 s\'appliquent.</p>';
+    } else if (elec.statut === 'a_confirmer') {
+      h += '<p>' + aConfirmer(elec.note) + ' ' + esc(elec.note) + '</p>';
+    } else {
+      h += '<p>Non applicable : l\'article 12 vise les compteurs électromagnétiques de 50 mm et plus munis d\'une alimentation de 120 V.' + (elec.note ? ' ' + esc(elec.note) : '') + '</p>';
+    }
+    el.innerHTML = h;
+  }
+
+  // Annexe E — fiche d'auto-inspection (révision 7).
+  var FICHE_E = [
+    { section: 'Section 1 — Préparation de tuyauterie', champs: [
+      ['robinetArretDiametre', 'Robinet d\'arrêt du bâtiment — diamètre'], ['etancheite', 'Étanchéité', ['oui', 'non', 'remplacement']],
+      ['prepDiametre', 'Diamètre de la préparation'], ['robinetsType', 'Robinets d\'isolation du compteur — type', ['à bille', 'à vanne']],
+      ['robinetsRaccords', 'Raccords', ['filetés', 'soudés', 'à brides']], ['robinetsDiametre', 'Robinets — diamètre'], ['robinetsNombre', 'Robinets — nombre'],
+      ['raccordUnions', 'Adaptateurs de compteur — raccord-unions', ['filetés', 'à brides']], ['adaptateursDiametre', 'Adaptateurs — diamètre'],
+      ['transitionLongueur', 'Pièce de transition — longueur'], ['transitionDiametre', 'Pièce de transition — diamètre'], ['materiel', 'Matériel'],
+      ['derivationAutorisation', 'Dérivation — autorisation', ['oui', 'non']], ['derivationInstallee', 'Dérivation — installée', ['oui', 'non']],
+      ['robinetVerrouillableType', 'Robinet verrouillable — type'], ['robinetVerrouillableDiametre', 'Robinet verrouillable — diamètre']] },
+    { section: 'Section 2 — Dispositif antirefoulement', champs: [
+      ['darType', 'DAR installé', ['DArPR', 'DAr2CR']], ['darSerie', 'N° de série'], ['verification', 'Vérification'],
+      ['rapportRemis', 'Rapport d\'inspection remis au propriétaire', ['oui', 'non']], ['etiquete', 'Étiqueté', ['oui', 'non']], ['darDiametre', 'Diamètre'],
+      ['tamis', 'Tamis installé', ['oui', 'non']], ['tamisDiametre', 'Tamis — diamètre'], ['verificateur', 'Nom et numéro du vérificateur']] },
+    { section: 'Section 3 — Général', champs: [
+      ['valveSurpression', 'Valve de surpression installée', ['oui', 'non']], ['miseTerre', 'Mise à la terre installée', ['oui', 'non']],
+      ['support', 'Support adéquat', ['oui', 'non']], ['degagement', 'Dégagement respecté', ['oui', 'non']], ['etancheiteBonne', 'Étanchéité bonne', ['oui', 'non']],
+      ['pressionSysteme', 'Pression du système (après DAR)']] },
+    { section: 'Section 4 — Compteur d\'eau', champs: [
+      ['compteurExistant', 'Numéro du compteur existant'], ['compteurNouveau', 'Numéro du nouveau compteur'],
+      ['lectureExistant', 'Lecture du compteur existant'], ['lectureNouveau', 'Lecture du nouveau compteur'],
+      ['uniteExistant', 'Unité de mesure (existant)', ['Usgpm', 'Gpm', 'M3', 'Pi3']], ['uniteNouveau', 'Unité de mesure (nouveau)', ['Usgpm', 'Gpm', 'M3', 'Pi3']],
+      ['diametreExistantPo', 'Diamètre existant (po)'], ['diametreNouveauPo', 'Diamètre nouveau (po)'],
+      ['reinstalle', 'Le compteur existant a été réinstallé', ['oui', 'non']], ['date', 'Date'], ['entreprise', 'Entreprise'], ['nom', 'Nom'], ['signature', 'Signature']] }
+  ];
+
+  function vueFicheE(avecCompteur) {
+    if (!avecCompteur.length) return '';
+    var bid = etat.autoInspection.branchement;
+    if (!avecCompteur.some(function (b) { return b.id === bid; })) bid = etat.autoInspection.branchement = avecCompteur[0].id;
+    var b = avecCompteur.filter(function (x) { return x.id === bid; })[0];
+    var v = etat.autoInspection[bid] || {};
+    var prep = b.diametrePreparationMm ? CalculsB.preparationTuyauterie(b.diametrePreparationMm)[0] : null;
+    var attendu = {
+      prepDiametre: b.diametrePreparationMm ? b.diametrePreparationMm + ' mm' : '',
+      transitionLongueur: prep ? (prep.ligne.transition || prep.ligne.LS || prep.ligne.LC) + ' mm' : '',
+      transitionDiametre: b.diametrePreparationMm ? b.diametrePreparationMm + ' mm' : ''
+    };
+    var h = '<section class="carte"><h2>Fiche d\'auto-inspection ' + ref('annE') + '</h2>' +
+      '<p class="aide">À transmettre à l\'autorité compétente une fois les travaux terminés ' + ref('art9_al1') + '. Les valeurs attendues selon l\'annexe B sont indiquées en gris.</p>' +
+      '<label class="champ">Branchement<select data-champ="autoInspection.branchement" data-rerendre>' +
+      avecCompteur.map(function (x) { return '<option value="' + x.id + '"' + (x.id === bid ? ' selected' : '') + '>' + esc(x.nom) + '</option>'; }).join('') + '</select></label>' +
+      '<div class="grille"><label class="champ">Nom du propriétaire<input type="text" data-ai-champ="proprietaire" value="' + esc(v.proprietaire) + '"></label>' +
+      '<label class="champ">N° UEF<input type="text" data-ai-champ="uef" value="' + esc(v.uef) + '"></label>' +
+      '<label class="champ">Adresse des travaux<input type="text" data-ai-champ="adresse" value="' + esc(v.adresse || etat.projet.adresse) + '"></label></div>';
+    FICHE_E.forEach(function (s) {
+      h += '<h3>' + esc(s.section) + '</h3><div class="grille">' + s.champs.map(function (c) {
+        var id = 'ai-' + c[0];
+        if (c[2]) {
+          return '<label class="champ" for="' + id + '">' + esc(c[1]) + '<select id="' + id + '" data-ai-champ="' + c[0] + '"><option value=""></option>' +
+            c[2].map(function (o) { return '<option' + (v[c[0]] === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>';
+        }
+        return '<label class="champ" for="' + id + '">' + esc(c[1]) + '<input id="' + id + '" type="text" data-ai-champ="' + c[0] + '" value="' + esc(v[c[0]]) + '"' +
+          (attendu[c[0]] ? ' placeholder="attendu : ' + esc(attendu[c[0]]) + '"' : '') + '></label>';
+      }).join('') + '</div>';
+    });
+    return h + '</section>';
+  }
+
+  function majBranchements() {
+    var evs = etat.branchements.map(function (b) { return { b: b, ev: evaluations(b) }; });
+    evs.forEach(function (x) { majModule4(x.b, x.ev); majModule5(x.b, x.ev); majModule6(x.b, x.ev); });
+    majNormesChambre(evs);
+  }
+
+  // ---------- module 7 ----------
+  var DIAM_C = [['inconnu', 'Inconnu'], [13, '13 mm'], [15, '15 mm'], [20, '20 mm'], [25, '25 mm'], [40, '40 mm'], [50, '50 mm'], [75, '75 mm'], [80, '80 mm'],
+    [100, '100 mm'], [150, '150 mm'], [200, '200 mm'], [250, '250 mm'], [300, '300 mm'], [350, '350 mm'], [400, '400 mm']];
+
+  function vueModule7() {
+    var c = etat.consommation;
+    return '<div class="colonnes"><div><section class="carte"><h2>Consommation réputée en cas de défaut ' + ref('art13') + '</h2>' +
+      '<p class="aide">Si le propriétaire ou l\'occupant ne permet pas les travaux, la consommation non mesurée est réputée égale à la consommation maximale ininterrompue selon le diamètre de l\'entrée d\'eau desservant l\'eau domestique ' + ref('art13') + '.</p>' +
+      '<label class="champ">Diamètre de l\'entrée d\'eau desservant l\'eau domestique<select data-champ="consommation.diametreMm">' +
+      DIAM_C.map(function (d) { return '<option value="' + d[0] + '"' + (String(c.diametreMm) === String(d[0]) ? ' selected' : '') + '>' + d[1] + '</option>'; }).join('') + '</select></label>' +
+      '<div class="grille"><label class="champ">Période visée (jours)<input type="number" min="0" step="1" data-champ="consommation.jours" value="' + esc(c.jours) + '"></label>' +
+      '<label class="champ">Tarif de l\'eau ($/m³), facultatif<input type="number" min="0" step="any" data-champ="consommation.tarif" value="' + esc(c.tarif) + '"></label></div>' +
+      '<p class="aide">Le tarif ne figure pas au règlement : valeur saisie par l\'usager, pour estimer l\'exposition financière.</p></section></div>' +
+      '<div><section class="carte resultat" id="m7-resultat" aria-live="polite"></section></div></div>' +
+      '<section class="carte" id="m7-tableau"></section>';
+  }
+
+  function majModule7() {
+    var el = document.getElementById('m7-resultat');
+    if (!el) return;
+    var c = etat.consommation, r = CalculsB.consommationReputee(c.diametreMm);
+    var h = '<h2>Résultat</h2>';
+    if (!r.couvert) {
+      h += '<div class="statut statut-warn"><strong>Non couvert ' + aConfirmer(r.motif) + '</strong><span>' + esc(r.motif) + ' ' + ref('annC') + '</span></div>';
+    } else {
+      var jours = Calculs.nombre(c.jours), tarif = Calculs.nombre(c.tarif);
+      h += '<div class="statut statut-err"><strong>' + fmt(r.m3j, 0) + ' m³/jour</strong><span>Diamètre retenu : ' + esc(r.ligne.libelle) + ' mm ' + ref('annC') + '</span>' +
+        (r.motif ? '<span>' + esc(r.motif) + ' ' + ref('art13') + '</span>' : '') + '</div>';
+      if (jours) {
+        h += '<table class="etapes"><tbody>' + etape('Volume réputé : ' + fmt(r.m3j, 0) + ' m³/j × ' + fmt(jours, 0) + ' j', '<strong>' + fmt(r.m3j * jours, 0) + ' m³</strong>', 'art13') +
+          (tarif ? '<tr><th scope="row">Montant estimé : volume × ' + fmt(tarif, 4) + ' $/m³ (tarif saisi)</th><td><strong>' + (r.m3j * jours * tarif).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }) + '</strong></td><td class="cite"><span class="badge badge-warn">hors règlement</span></td></tr>' : '') +
+          '</tbody></table>';
+      }
+    }
+    h += '<p class="aide">L\'article 13 mentionne une vitesse de 3 m/s ; le tableau de l\'annexe C ne correspond pas exactement au calcul théorique (20 mm à 3 m/s ≈ 81,4 m³/j contre 86). Le tableau est appliqué tel quel.</p>';
+    el.innerHTML = h;
+    document.getElementById('m7-tableau').innerHTML = '<h2>Annexe C — consommation réputée maximale ' + ref('annC') + '</h2><div class="defile"><table class="inventaire"><thead><tr><th>Diamètre nominal (mm)</th><th class="num">m³/jour</th></tr></thead><tbody>' +
+      RCG.ANNEXE_C.map(function (l) {
+        return '<tr' + (r.couvert && r.ligne === l ? ' class="propose"' : '') + '><td>' + esc(l.libelle) + '</td><td class="num">' + fmt(l.m3j, 0) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
   // ---------- événements ----------
   function etabDe(el) {
     var c = el.closest('[data-etab]');
@@ -1160,11 +1895,19 @@ tr.propose td { background: var(--ok-fond); }
       if (t.value === '') delete e.quantites[id]; else e.quantites[id] = t.value;
       var item = RCG.TABLEAU_12.concat(RCG.TABLEAU_13).filter(function (x) { return x.id === id; })[0];
       document.getElementById('t-' + e.id + '-' + id).textContent = fmt(Calculs.contribution(item, t.value));
+    } else if (t.hasAttribute('data-br-champ')) {
+      brDe(t)[t.getAttribute('data-br-champ')] = t.value;
+      if (t.getAttribute('data-br-champ') === 'typeCompteur') { sauver(); rendre(); return; }
+    } else if (t.hasAttribute('data-ai-champ')) {
+      var bid = etat.autoInspection.branchement || '';
+      etat.autoInspection[bid] = etat.autoInspection[bid] || {};
+      etat.autoInspection[bid][t.getAttribute('data-ai-champ')] = t.value;
     } else if (t.hasAttribute('data-filtre')) {
       filtrer(t);
       return;
     } else return;
     sauver();
+    if (t.hasAttribute('data-rerendre')) { rendre(); return; }
     majResultats();
   });
 
@@ -1190,7 +1933,15 @@ tr.propose td { background: var(--ok-fond); }
       return;
     }
     var a = t.getAttribute('data-action');
-    if (a === 'ajouter-etab') {
+    if (a === 'ajouter-br') {
+      etat.branchements.push(branchementVide(etat.branchements.length + 1));
+    } else if (a === 'retirer-br') {
+      var br = brDe(t);
+      demander('Retirer « ' + br.nom + ' » ?', 'Retirer', function () {
+        etat.branchements = etat.branchements.filter(function (x) { return x !== br; });
+      });
+      return;
+    } else if (a === 'ajouter-etab') {
       etat.etablissements.push({ id: nouvelId(), nom: 'Établissement ' + (etat.etablissements.length + 1), usageCas1: '', quantites: {} });
     } else if (a === 'retirer-etab') {
       var e = etabDe(t);
@@ -1202,7 +1953,7 @@ tr.propose td { background: var(--ok-fond); }
       t.closest('[data-groupe]').classList.toggle('replie');
       return;
     } else if (a === 'exemple') {
-      demander('Remplacer le projet courant par le jeu d\'exemple ?', 'Charger l\'exemple', function () { etat = copie(EXEMPLE); });
+      demander('Remplacer le projet courant par le jeu d\'exemple ?', 'Charger l\'exemple', function () { etat = normaliser(copie(EXEMPLE)); });
       return;
     } else if (a === 'nouveau') {
       demander('Effacer le projet courant ?', 'Effacer', function () { etat = projetVide(); });
@@ -1277,8 +2028,7 @@ tr.propose td { background: var(--ok-fond); }
     f.text().then(function (txt) {
       var o = JSON.parse(txt);
       if (!o || !o.admissibilite || !Array.isArray(o.etablissements)) throw new Error('format');
-      etat = o;
-      if (!etat.selection) etat.selection = selectionVide();
+      etat = normaliser(o);
       sauver();
       rendre();
     }).catch(function () { informer('Fichier de projet invalide : choisir un fichier JSON exporté par cet outil.'); });
