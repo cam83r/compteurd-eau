@@ -9,7 +9,7 @@ Règlement RCG 07-031 de la Ville de Montréal (codification au 23 décembre 202
 
 ## Utilisation
 
-Ouvrir `app/index.html` dans un navigateur. Aucune installation ni compilation. Le projet est
+Ouvrir `app/index.html` dans un navigateur (version publiée : `node scripts/build-artifact.js` produit `dist/compteurs-eau.html`). Aucune installation ni compilation. Le projet est
 enregistré dans le navigateur et peut être exporté ou importé en JSON.
 
 ## État des modules

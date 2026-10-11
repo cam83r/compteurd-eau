@@ -50,7 +50,7 @@ h3 { font-size: 1rem; margin: 1.1rem 0 .5rem; }
 h4 { font-size: .95rem; margin: 1rem 0 .4rem; }
 code { font-size: .85em; }
 
-.entete { background: var(--carte); border-bottom: 1px solid var(--bord); padding: 12px 16px 0; position: sticky; top: 0; z-index: 5; }
+.entete { background: var(--carte); border-bottom: 1px solid var(--bord); padding: 12px 16px 0; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
 .entete-ligne { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; }
 .sous-titre { margin: 0; color: var(--texte-doux); font-size: .85rem; }
 .barre-outils { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -166,3 +166,29 @@ tr.propose td { background: var(--ok-fond); }
 .legende .trait.demande { border-top: 2px dashed var(--texte); }
 .legende .trait.limite { border-color: var(--err); border-top-width: 2px; }
 .statut span .ref { vertical-align: 0; }
+
+/* Thème sombre choisi explicitement */
+:root[data-theme="dark"] {
+    --fond: #11161d;
+    --carte: #1a212b;
+    --texte: #e6ebf1;
+    --texte-doux: #9aa7b6;
+    --bord: #2e3946;
+    --accent: #5aa2ec;
+    --accent-texte: #0d1520;
+    --ok: #6fd39a;
+    --ok-fond: #15301f;
+    --warn: #f0c060;
+    --warn-fond: #352a10;
+    --err: #ff8f84;
+    --err-fond: #3a1916;
+    --ref-fond: #1d3047;
+    --ombre: none;
+    color-scheme: dark;
+}
+:root[data-theme="dark"] { --s0: #6ea8ff; --s1: #ffa557; --s2: #4fd1bd; --s3: #c48ef0; --s4: #f27fb0; --s5: #9fd35a; }
+
+.bandeau { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 6px; background: var(--ref-fond); font-size: .9rem; }
+.bandeau .export { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.bandeau textarea { width: 100%; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--texte); background: var(--carte); border: 1px solid var(--bord); border-radius: 6px; padding: 6px; }
+.export-actions { display: flex; flex-wrap: wrap; gap: 6px; }

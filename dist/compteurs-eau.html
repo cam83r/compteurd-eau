@@ -1,0 +1,1320 @@
+<title>Compteurs d'eau RCG 07-031</title>
+<style>
+:root {
+  --fond: #f4f6f8;
+  --carte: #ffffff;
+  --texte: #1c2430;
+  --texte-doux: #5a6676;
+  --bord: #d8dee6;
+  --accent: #0b5cad;
+  --accent-texte: #ffffff;
+  --ok: #1f7a46;
+  --ok-fond: #e5f4ea;
+  --warn: #8a5a00;
+  --warn-fond: #fff3d6;
+  --err: #b42318;
+  --err-fond: #fde8e6;
+  --ref-fond: #e8f0fa;
+  --ombre: 0 1px 2px rgba(16, 24, 40, 0.06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fond: #11161d;
+    --carte: #1a212b;
+    --texte: #e6ebf1;
+    --texte-doux: #9aa7b6;
+    --bord: #2e3946;
+    --accent: #5aa2ec;
+    --accent-texte: #0d1520;
+    --ok: #6fd39a;
+    --ok-fond: #15301f;
+    --warn: #f0c060;
+    --warn-fond: #352a10;
+    --err: #ff8f84;
+    --err-fond: #3a1916;
+    --ref-fond: #1d3047;
+    --ombre: none;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+h1 { font-size: 1.35rem; margin: 0; }
+h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
+h3 { font-size: 1rem; margin: 1.1rem 0 .5rem; }
+h4 { font-size: .95rem; margin: 1rem 0 .4rem; }
+code { font-size: .85em; }
+
+.entete { background: var(--carte); border-bottom: 1px solid var(--bord); padding: 12px 16px 0; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.entete-ligne { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; }
+.sous-titre { margin: 0; color: var(--texte-doux); font-size: .85rem; }
+.barre-outils { display: flex; flex-wrap: wrap; gap: 6px; }
+.avertissement { margin: 10px 0 0; padding: 6px 10px; border-left: 3px solid var(--warn); background: var(--warn-fond); font-size: .82rem; }
+.nav { display: flex; gap: 2px; overflow-x: auto; margin-top: 10px; }
+.onglet { border: 0; background: none; color: var(--texte-doux); padding: 8px 12px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; font: inherit; font-size: .9rem; }
+.onglet.actif { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.onglet[aria-disabled="true"] { opacity: .6; }
+.onglet small { font-size: .7rem; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.carte { background: var(--carte); border: 1px solid var(--bord); border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: var(--ombre); }
+.colonnes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.colonnes > div > .resultat { position: sticky; top: 150px; }
+@media (max-width: 860px) { .colonnes { grid-template-columns: 1fr; } .colonnes > div > .resultat { position: static; } }
+.grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+
+.champ { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--texte-doux); margin-bottom: 10px; }
+input, select { font: inherit; color: var(--texte); background: var(--carte); border: 1px solid var(--bord); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+input:focus, select:focus, button:focus-visible, .ref:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+fieldset.tri { border: 0; padding: 0; margin: 0 0 12px; }
+fieldset.tri legend { font-size: .9rem; margin-bottom: 4px; }
+fieldset.tri label { margin-right: 14px; font-size: .9rem; white-space: nowrap; }
+.aide { color: var(--texte-doux); font-size: .82rem; }
+
+.btn { font: inherit; font-size: .85rem; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-texte); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.btn-sec { background: transparent; color: var(--accent); }
+.lien { border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; padding: 0; }
+.actions { margin-bottom: 16px; }
+
+.ref { display: inline-block; font-size: .72rem; font-weight: 600; color: var(--accent); background: var(--ref-fond); border-radius: 10px; padding: 0 7px; cursor: help; white-space: nowrap; vertical-align: 1px; }
+.ref-note { display: inline-block; width: 1.2em; text-align: center; border-radius: 50%; background: var(--ref-fond); color: var(--accent); font-size: .72rem; cursor: help; }
+.infobulle { position: fixed; z-index: 20; max-width: min(420px, calc(100vw - 16px)); background: var(--texte); color: var(--carte); font-size: .8rem; line-height: 1.4; padding: 8px 10px; border-radius: 6px; pointer-events: none; }
+.badge { display: inline-block; font-size: .7rem; font-weight: 700; border-radius: 4px; padding: 0 6px; }
+.badge-warn { background: var(--warn-fond); color: var(--warn); border: 1px solid var(--warn); }
+
+.statut { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 6px; border-left: 4px solid; margin-bottom: 10px; }
+.statut strong { font-size: 1.05rem; }
+.statut span { font-size: .85rem; }
+.statut-ok { background: var(--ok-fond); border-color: var(--ok); }
+.statut-ok strong { color: var(--ok); }
+.statut-warn { background: var(--warn-fond); border-color: var(--warn); }
+.statut-warn strong { color: var(--warn); }
+.statut-err { background: var(--err-fond); border-color: var(--err); }
+.statut-err strong { color: var(--err); }
+.motifs, .pieces { padding-left: 1.2em; margin: .4rem 0; }
+.motifs li, .pieces li { margin-bottom: 4px; }
+
+.jauge { position: relative; height: 18px; border-radius: 9px; background: var(--fond); overflow: visible; margin: 28px 0 4px; border: 1px solid var(--bord); }
+.jauge-zone { position: absolute; top: 0; bottom: 0; opacity: .55; }
+.jauge-zone.ok { left: 0; background: var(--ok); border-radius: 9px 0 0 9px; }
+.jauge-zone.warn { background: var(--warn); }
+.jauge-zone.err { background: var(--err); border-radius: 0 9px 9px 0; }
+.jauge-curseur { position: absolute; top: -6px; bottom: -6px; width: 3px; background: var(--texte); transform: translateX(-1px); }
+.jauge-curseur span { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.jauge-legende { position: relative; display: flex; justify-content: space-between; font-size: .72rem; color: var(--texte-doux); margin-bottom: 12px; min-height: 1.2em; }
+.jauge-seuil { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; font-weight: 600; }
+
+.etab-tete { display: flex; flex-wrap: wrap; gap: 0 12px; align-items: flex-end; }
+.etab-tete .champ { flex: 1 1 180px; }
+.etab-tete .btn { margin-bottom: 10px; }
+.inventaire, .etapes { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.inventaire th, .inventaire td, .etapes th, .etapes td { border-bottom: 1px solid var(--bord); padding: 5px 6px; text-align: left; vertical-align: middle; }
+.inventaire thead th { font-size: .78rem; color: var(--texte-doux); font-weight: 600; }
+.num { text-align: right !important; white-space: nowrap; }
+.inventaire input { width: 6.5em; text-align: right; }
+.groupe-tete th { background: var(--fond); font-weight: 400; }
+.groupe.replie tr:not(.groupe-tete) { display: none; }
+.sous-total { margin: 10px 0 0; font-size: .9rem; }
+.etapes th { font-weight: 500; width: 38%; }
+.etapes .cite { width: 1%; white-space: nowrap; }
+@media (max-width: 600px) {
+  .inventaire thead th:nth-child(3), .inventaire td:nth-child(3) { display: none; }
+  .inventaire input { width: 5em; }
+  .etapes th { width: auto; }
+}
+.champ .ref { align-self: flex-start; }
+@media (max-width: 860px) { .entete { position: static; } }
+
+/* Module 3 */
+:root { --s0: #2a6fdb; --s1: #d9730d; --s2: #0f9d8a; --s3: #8e44ad; --s4: #b8336a; --s5: #5d8a1c; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --s0: #6ea8ff; --s1: #ffa557; --s2: #4fd1bd; --s3: #c48ef0; --s4: #f27fb0; --s5: #9fd35a; }
+}
+.ref-src { background: var(--fond); color: var(--texte-doux); border: 1px solid var(--bord); }
+.badge-ok { background: var(--ok-fond); color: var(--ok); border: 1px solid var(--ok); }
+.pastille { font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.pastille-ok { color: var(--ok); }
+.pastille-warn { color: var(--warn); }
+.pastille-err { color: var(--err); }
+tr.propose td { background: var(--ok-fond); }
+.defile { overflow-x: auto; }
+.graphique { width: 100%; height: auto; display: block; }
+.graphique .grille-l { stroke: var(--bord); stroke-width: 1; }
+.graphique .axe { fill: var(--texte-doux); font-size: 11px; }
+.graphique .courbe { fill: none; stroke-width: 2.5; }
+.graphique .tirets, .legende .trait.tirets { stroke-dasharray: 7 4; }
+.graphique .demande { stroke: var(--texte); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.graphique .limite { stroke: var(--err); stroke-width: 1.5; }
+.graphique .point { stroke: var(--carte); stroke-width: 1.5; }
+.graphique .c0 { stroke: var(--s0); } .graphique .point.c0 { fill: var(--s0); }
+.graphique .c1 { stroke: var(--s1); } .graphique .point.c1 { fill: var(--s1); }
+.graphique .c2 { stroke: var(--s2); } .graphique .point.c2 { fill: var(--s2); }
+.graphique .c3 { stroke: var(--s3); } .graphique .point.c3 { fill: var(--s3); }
+.graphique .c4 { stroke: var(--s4); } .graphique .point.c4 { fill: var(--s4); }
+.graphique .c5 { stroke: var(--s5); } .graphique .point.c5 { fill: var(--s5); }
+.legende { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .82rem; }
+.legende li { display: flex; align-items: center; gap: 6px; }
+.legende .trait { display: inline-block; width: 22px; height: 0; border-top: 3px solid; }
+.legende .trait.tirets { border-top-style: dashed; }
+.legende .c0 { border-color: var(--s0); } .legende .c1 { border-color: var(--s1); } .legende .c2 { border-color: var(--s2); }
+.legende .c3 { border-color: var(--s3); } .legende .c4 { border-color: var(--s4); } .legende .c5 { border-color: var(--s5); }
+.legende .trait.demande { border-top: 2px dashed var(--texte); }
+.legende .trait.limite { border-color: var(--err); border-top-width: 2px; }
+.statut span .ref { vertical-align: 0; }
+
+/* Thème sombre choisi explicitement */
+:root[data-theme="dark"] {
+    --fond: #11161d;
+    --carte: #1a212b;
+    --texte: #e6ebf1;
+    --texte-doux: #9aa7b6;
+    --bord: #2e3946;
+    --accent: #5aa2ec;
+    --accent-texte: #0d1520;
+    --ok: #6fd39a;
+    --ok-fond: #15301f;
+    --warn: #f0c060;
+    --warn-fond: #352a10;
+    --err: #ff8f84;
+    --err-fond: #3a1916;
+    --ref-fond: #1d3047;
+    --ombre: none;
+    color-scheme: dark;
+}
+:root[data-theme="dark"] { --s0: #6ea8ff; --s1: #ffa557; --s2: #4fd1bd; --s3: #c48ef0; --s4: #f27fb0; --s5: #9fd35a; }
+
+.bandeau { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 6px; background: var(--ref-fond); font-size: .9rem; }
+.bandeau .export { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.bandeau textarea { width: 100%; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--texte); background: var(--carte); border: 1px solid var(--bord); border-radius: 6px; padding: 6px; }
+.export-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+</style>
+<header class="entete">
+    <div class="entete-ligne">
+      <div>
+        <h1>Sélection de compteurs d'eau</h1>
+        <p class="sous-titre">RCG 07-031 — codification administrative au 23 décembre 2025 · <span id="titre-projet"></span></p>
+      </div>
+      <div class="barre-outils">
+        <button class="btn btn-sec" data-action="exemple">Charger l'exemple</button>
+        <button class="btn btn-sec" data-action="nouveau">Nouveau projet</button>
+        <button class="btn btn-sec" data-action="exporter">Exporter (JSON)</button>
+        <button class="btn btn-sec" data-action="importer">Importer</button>
+        <input type="file" id="fichier-import" accept="application/json,.json" hidden>
+      </div>
+    </div>
+    <p class="avertissement" role="note">Outil d'aide à la décision — la détermination du type et de la dimension du compteur revient à l'autorité compétente (art. 9, RCG 07-031). La conformité finale doit être validée par un professionnel contre le texte officiel.</p>
+    <div id="bandeau" class="bandeau" role="status" hidden></div>
+    <nav id="nav" class="nav" aria-label="Modules"></nav>
+  </header>
+  <main id="contenu"></main>
+  <div id="infobulle" class="infobulle" role="tooltip" hidden></div>
+
+  <script>
+/*
+ * Données normatives extraites du RCG 07-031 (codification administrative au 23 décembre 2025).
+ * Source : docs/extraction_RCG_07-031.md — chaque valeur porte sa référence.
+ * Ne rien ajouter ici qui ne soit pas tiré du PDF ; sinon marquer aConfirmer: true.
+ */
+(function (root) {
+  'use strict';
+
+  var REGLEMENT = 'RCG 07-031 (codification au 23 décembre 2025)';
+
+  // Annexe H, tableau 1.2 — appareils courants (USGPM par unité).
+  var TABLEAU_12 = [
+    { id: 'baignoire', libelle: 'Baignoire', unite: 8 },
+    { id: 'bidet', libelle: 'Bidet', unite: 2 },
+    { id: 'douche_1', libelle: 'Douche avec 1 seul pommeau', unite: 2.2,
+      note: 'Si la douche est dans la baignoire, ne rien inscrire pour la douche.' },
+    { id: 'douche_n', libelle: "Douche avec plus d'un pommeau", unite: 10 },
+    { id: 'evier_res', libelle: 'Évier de cuisine, résidentiel', unite: 2.2 },
+    { id: 'evier_com', libelle: 'Évier de cuisine, commercial ou de service', unite: 4 },
+    { id: 'fontaine', libelle: 'Fontaine à boire', unite: 1 },
+    { id: 'lavabo', libelle: 'Lavabo', unite: 1.5 },
+    { id: 'lv_res', libelle: 'Lave-vaisselle résidentiel', unite: 2 },
+    { id: 'lv_com', libelle: 'Lave-vaisselle commercial, lave-verre', unite: 3 },
+    { id: 'laveuse', libelle: 'Machine à laver domestique ou commerciale', unite: 6 },
+    { id: 'wc_reservoir', libelle: 'Toilette à réservoir de chasse', unite: 4 },
+    { id: 'wc_soupape', libelle: 'Toilette à soupape de chasse (sans réservoir)', unite: 35, declencheCas1: true },
+    { id: 'urinoir_reservoir', libelle: 'Urinoir à réservoir de chasse', unite: 4 },
+    { id: 'urinoir_soupape', libelle: 'Urinoir à soupape de chasse (sans réservoir)', unite: 10, declencheCas1: true }
+  ];
+
+  var NOTE_2H = "N'inscrire que ceux qui sont utilisés plus de 2 heures par mois.";
+  var BOYAUX = [['3/8', 3], ['1/2', 5], ['5/8', 9], ['3/4', 12], ['1', 20], ['1 1/4', 30], ['1 1/2', 45], ['2', 75], ['3', 200]];
+  var ROBINETS_EXT = [['3/8', 4], ['1/2', 5], ['5/8', 12], ['3/4', 16], ['1', 27], ['1 1/4', 40], ['1 1/2', 60], ['2', 100], ['3', 260]];
+  BOYAUX.forEach(function (b) {
+    TABLEAU_12.push({ id: 'boyau_' + b[0].replace(/[ /]/g, '_'), libelle: 'Boyau de nettoyage ' + b[0] + ' po', unite: b[1], groupe: 'Boyaux de nettoyage', note: NOTE_2H });
+  });
+  ROBINETS_EXT.forEach(function (r) {
+    TABLEAU_12.push({ id: 'robext_' + r[0].replace(/[ /]/g, '_'), libelle: 'Robinet extérieur ' + r[0] + ' po', unite: r[1], groupe: 'Robinets extérieurs', note: NOTE_2H });
+  });
+
+  // Annexe H, tableau 1.3 — autres appareils.
+  // saisie 'quantite' : contribution = quantité × unité ; saisie 'debit' : l'usager inscrit le débit total (USGPM).
+  var TABLEAU_13 = [
+    { id: 'frigo_eau', libelle: "Réfrigérateurs ou congélateurs refroidis à l'eau", unite: 0.84, quantiteEn: 'HP du compresseur' },
+    { id: 'clim_hydro', libelle: 'Climatiseur hydro-réfrigéré', unite: 1, quantiteEn: 'tonnes de climatisation' },
+    { id: 'compresseur_air', libelle: "Compresseur à air refroidi à l'eau", unite: 0.2, quantiteEn: 'HP du compresseur' },
+    { id: 'irrigation', libelle: "Système d'irrigation ou d'arrosage extérieur", saisie: 'debit',
+      note: "S'il est en fonction pendant la période de haute consommation du reste du bâtiment, inscrire le débit d'eau max. total (USGPM). Sinon, ne rien inscrire." },
+    { id: 'tour_evap', libelle: 'Tour évaporatrice', unite: 0.09, quantiteEn: 'tonnes de climatisation (total)' },
+    { id: 'lave_auto_man', libelle: 'Lave-auto manuel', unite: 4, quantiteEn: 'stations de lavage' },
+    { id: 'lave_auto_auto', libelle: 'Lave-auto automatique', unite: 32, quantiteEn: 'stations (tunnel = 2 stations)' },
+    { id: 'autre', libelle: 'Autre (description)', saisie: 'debit',
+      note: "Inscrire le débit d'eau maximal total des appareils (USGPM)." }
+  ];
+  [['3/8', 5], ['1/2', 11], ['5/8', 12], ['3/4', 16], ['1', 27], ['1 1/4', 41], ['1 1/2', 57], ['2', 99], ['3', 260]].forEach(function (p) {
+    TABLEAU_13.push({ id: 'piscine_' + p[0].replace(/[ /]/g, '_'), libelle: 'Piscine, pataugeoire, fontaine décorative — alimentation ' + p[0] + ' po', unite: p[1], groupe: 'Piscines, pataugeoires, fontaines' });
+  });
+  [['3/8', 5], ['1/2', 11], ['5/8', 12], ['3/4', 16], ['1', 27], ['1 1/4', 41], ['1 1/2', 57], ['2', 99], ['3', 260], ['4', 444], ['6', 989], ['8', 1698], ['10', 2658]].forEach(function (m) {
+    TABLEAU_13.push({ id: 'laveuse_ind_' + m[0].replace(/[ /]/g, '_'), libelle: 'Machine à laver industrielle — alimentation ' + m[0] + ' po', unite: m[1], groupe: 'Machines à laver industrielles' });
+  });
+
+  // Annexe I.
+  var ANNEXE_I = {
+    // Demande de pointe de référence : « 2,3 m³/h (10 gal US) ».
+    seuilUSGPM: 10,
+    seuilImprimeM3h: 2.3,
+    conversionM3hParUSGPM: 0.227, // Annexe I étape 5 ; Annexe H : 1 USGPM = 0,227 m³/h
+    pressionTheoriqueKPa: 414,
+    reference: 'AWWA M22, 2e édition (méthode des demandes de pointe par appareil)',
+    usagesCas1: ['salle de spectacle', 'théâtre', 'cinéma', 'école', 'stade', 'centre sportif', 'aréna', 'hôtel', 'motel'],
+    cas1: [
+      { plage: '0 < Q12 < 45', min: 0, minInclus: false, max: 45, maxInclus: false, formule: 'Q12P = Q12',
+        f: function (q) { return q; } },
+      { plage: '45 ≤ Q12 ≤ 1 250', min: 45, minInclus: true, max: 1250, maxInclus: true,
+        formule: 'Q12P = (−3×10⁻⁵ × Q12²) + (0,115 × Q12) + 39,145',
+        f: function (q) { return -3e-5 * q * q + 0.115 * q + 39.145; } },
+      { plage: '1 250 < Q12 ≤ 13 000', min: 1250, minInclus: false, max: 13000, maxInclus: true,
+        formule: 'Q12P = (−3×10⁻⁷ × Q12²) + (0,0114 × Q12) + 120,8',
+        f: function (q) { return -3e-7 * q * q + 0.0114 * q + 120.8; } },
+      { plage: 'Q12 > 13 000', min: 13000, minInclus: false, max: Infinity, maxInclus: false,
+        formule: 'Q12P = ((Q12 − 3000) × 68/10000) + 153',
+        f: function (q) { return (q - 3000) * 68 / 10000 + 153; } }
+    ],
+    cas2: [
+      { plage: '0 < Q12 < 25', min: 0, minInclus: false, max: 25, maxInclus: false,
+        formule: 'Q12P = (−0,0103 × Q12²) + (0,9846 × Q12) − 0,18',
+        f: function (q) { return -0.0103 * q * q + 0.9846 * q - 0.18; } },
+      { plage: '25 ≤ Q12 ≤ 1 250', min: 25, minInclus: true, max: 1250, maxInclus: true,
+        formule: 'Q12P = (−3×10⁻⁵ × Q12²) + (0,0748 × Q12) + 16,19',
+        f: function (q) { return -3e-5 * q * q + 0.0748 * q + 16.19; } },
+      { plage: 'Q12 > 1 250', min: 1250, minInclus: false, max: Infinity, maxInclus: false,
+        formule: 'Q12P = (−2×10⁻⁸ × Q12²) + (0,007 × Q12) + 56,204',
+        f: function (q) { return -2e-8 * q * q + 0.007 * q + 56.204; } }
+    ]
+  };
+
+  // Références citées dans les infobulles.
+  var REFS = {
+    art2_1_al1: { court: 'art. 2.1 al. 1', texte: "L'exigence d'installer un compteur s'applique seulement à tout branchement d'eau d'un immeuble : 1° porté au rôle, catégorie des immeubles non résidentiels (LFM art. 244.31), classes 5 à 10 (art. 244.32) ou unités visées aux art. 244.36, 244.51 ou 244.52 ; 2° visé par l'art. 204 LFM, par. 1 à 9 ou 11 à 19 ; 3° utilisé ou destiné à être utilisé en partie ou en totalité à des fins non résidentielles et pas encore porté au rôle." },
+    art2_1_al2: { court: 'art. 2.1 al. 2', texte: "Un compteur d'eau n'a pas à être installé pour un immeuble où aucun aménagement ou bâtiment n'est relié à un branchement d'eau." },
+    art2_1_al3: { court: 'art. 2.1 al. 3', texte: "Le propriétaire d'un immeuble utilisé en partie à des fins résidentielles peut demander par écrit à être exempté. Demande accompagnée des annexes D et H dûment complétées. Condition : l'estimation de la somme des demandes de pointe de tous les appareils (annexe H) de tous les établissements doit être inférieure ou égale à la demande de pointe définie à l'annexe I selon sa méthode de calcul." },
+    art1_etab: { court: 'art. 1', texte: "« établissement » : immeuble ou partie d'immeuble utilisé ou destiné à être utilisé par un seul occupant pour un usage autre que résidentiel." },
+    art9_al3: { court: 'art. 9 al. 3', texte: "Le type et la dimension de tout compteur sont déterminés par l'autorité compétente, en tenant compte de la gamme de débit du compteur, de la demande de pointe de l'immeuble et de la perte de pression occasionnée par le compteur." },
+    annH_12: { court: 'ann. H, tabl. 1.2', texte: 'Annexe H (révision 7), tableau 1.2 — Inventaire des appareils courants consommant de l\'eau ; unités d\'alimentation en USGPM.' },
+    annH_13: { court: 'ann. H, tabl. 1.3', texte: 'Annexe H (révision 7), tableau 1.3 — Inventaire des autres appareils consommant de l\'eau ; unités d\'alimentation en USGPM.' },
+    annH_conv: { court: 'ann. H', texte: 'USGPM : gallon US par minute. 1 USGPM = 3,785 litres par minute, ou 0,227 mètre cube par heure.' },
+    annI_q12: { court: 'ann. I, étape 3', texte: 'Faire la somme totale des unités d\'alimentation du tableau 1.2 (Q12).' },
+    annI_q13: { court: 'ann. I, étape 4', texte: 'Faire la somme totale des unités d\'alimentation du tableau 1.3 (Q13).' },
+    annI_cas: { court: 'ann. I, étape 5', texte: "Cas 1 : l'établissement est une salle de spectacle, un théâtre, un cinéma, une école, un stade, un centre sportif, un aréna, un hôtel, un motel, ou contient au moins une toilette ou un urinoir à soupape de chasse. Cas 2 : autre type d'établissement." },
+    annI_q12p: { court: 'ann. I, étape 5', texte: 'Q12P : demande de pointe maximale pondérée, selon la formule correspondant au cas et à la plage de Q12.' },
+    annI_qpm: { court: 'ann. I, étape « 5 » (QPM)', texte: 'QPUS = Q13 + Q12P (gal US/min) ; QPM = QPUS × 0,227 (m³/h). Le PDF numérote deux étapes « 5 ».' },
+    annI_seuil: { court: 'ann. I', texte: 'Demande de pointe (QPM) : 2,3 m³/h (10 gal US). Pression théorique 414 kPa (60 PSI). Référence : AWWA M22, 2e édition.' },
+    art9_al4: { court: 'art. 9 al. 4', texte: "Sur demande du propriétaire, le dimensionnement du compteur exigé est modifié s'il est démontré, à l'aide de l'annexe D et de l'inventaire de l'annexe H ou d'un calcul hydraulique signé par un ingénieur, que le choix du compteur proposé est inadéquat pour assurer les besoins en eau de l'immeuble." },
+    art12: { court: 'art. 12', texte: "Le propriétaire dont l'immeuble est desservi par un compteur électromagnétique de 50 mm et plus, muni d'une alimentation électrique de 120 volts, doit fournir une alimentation électrique de 120 volts pour le compteur et ses équipements." },
+    art2_al2: { court: 'art. 2 al. 2', texte: "Pour un branchement existant, les compteurs requis sont fournis et installés par la Ville (sauf contraintes d'opération)." },
+    annB_diam: { court: 'ann. B', texte: 'Annexe B — préparation de tuyauterie : croquis 001 (20 à 50 mm), 002 (50 à 150 mm, dont 75 mm), 003 (200 à 300 mm).' },
+    annD: { court: 'ann. D', texte: 'Annexe D — Questionnaire : fiche d\'information (révision 6).' },
+    annD_13: { court: 'ann. D, § 1.3', texte: 'Annexe D, § 1.3 — Usages du bâtiment : vocation I.C.I. (industrielle, commerciale, institutionnelle) ; nombre d\'unités de logement ; salle de spectacle, théâtre, cinéma, école, stade, centre sportif, aréna, hôtel ou motel.' }
+  };
+
+  var api = {
+    REGLEMENT: REGLEMENT,
+    TABLEAU_12: TABLEAU_12,
+    TABLEAU_13: TABLEAU_13,
+    ANNEXE_I: ANNEXE_I,
+    REFS: REFS
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.RCG = api;
+})(this);
+</script>
+  <script>
+/*
+ * Base de données compteurs — module 3.
+ * Le RCG 07-031 ne contient ni gamme de débit ni perte de pression (art. 9 al. 3) : ces données
+ * proviennent des fiches fabricants fournies par l'utilisateur (docs/fiches/).
+ *
+ * perte : points [débit USGPM, perte psi] LUS SUR LES GRAPHIQUES des fiches (lecture visuelle,
+ * précision ≈ ±0,2 psi), aux croisements de la courbe avec le quadrillage. Entre deux points :
+ * interpolation linéaire. null = donnée absente de la source.
+ */
+(function (root) {
+  'use strict';
+
+  var SRC_T10_PETIT = { doc: 'Neptune, T-10 Meter 5/8", 3/4" and 1" (PS T10 SMALL 05.11, © 2011)', fichier: 'docs/fiches/Neptune_T-10_5-8_a_1po.pdf', pagePlage: 4, pagePerte: 3 };
+  var SRC_T10_INTER = { doc: 'Neptune, T-10 Meter 1 1/2" and 2" (21-006205 PS T-10 INTERMEDIATE 11.21, © 2021)', fichier: 'docs/fiches/Neptune_T-10_1.5-2po.pdf', pagePlage: 3, pagePerte: 2 };
+  var SRC_IPERL = { doc: 'Sensus, iPERL Smart Water Meter (WDS-10006-05, © 2019)', fichier: 'docs/fiches/Sensus_iPERL.pdf', pagePlage: 3, pagePerte: 4 };
+  var SRC_MACH10 = { doc: 'Neptune, MACH 10 C&I Ultrasonic Meter — Installation and Maintenance Guide (Part No 12287-0001, © 2020-2026), tableau 8 (p. 12 imprimée)', fichier: 'docs/fiches/Neptune_MACH-10_C_et_I_3-12po.pdf', pagePlage: 26, pagePerte: null };
+
+  var T10 = { fabricant: 'Neptune', modele: 'T-10', technologie: 'volumetrique', libelleTechno: 'Volumétrique (disque nutatif)', norme: 'AWWA C700', pressionMaxPsi: 150 };
+  var IPERL = { fabricant: 'Sensus', modele: 'iPERL', technologie: 'electromagnetique', libelleTechno: 'Électromagnétique (pile, sans pièce mobile)', norme: 'AWWA C715', alimentation: 'pile' };
+  var MACH10 = { fabricant: 'Neptune', modele: 'MACH 10 C&I', technologie: 'ultrasonique', libelleTechno: 'Ultrasonique (pile, sans pièce mobile)', norme: 'AWWA C715', pressionMaxPsi: 175, alimentation: 'pile' };
+
+  function c(base, o) {
+    var r = {};
+    Object.keys(base).forEach(function (k) { r[k] = base[k]; });
+    Object.keys(o).forEach(function (k) { r[k] = o[k]; });
+    r.id = (r.modele + '-' + r.diametrePo).replace(/[^\w]+/g, '_');
+    return r;
+  }
+
+  var COMPTEURS = [
+    // Neptune T-10 — plage normale à 100 % (±1,5 %) ; plage AWWA ; bas débit à 95 %.
+    c(T10, { diametrePo: '5/8', diametreMm: 15, plageNormale: [0.5, 20], plageAWWA: [1, 20], basDebit: 0.125, basDebitPrecision: '95 %', source: SRC_T10_PETIT,
+      perte: [[0, 0], [5, 0.5], [10, 2], [14, 4], [17.2, 6], [20, 8]] }),
+    c(T10, { diametrePo: '3/4', diametreMm: 20, plageNormale: [0.75, 30], plageAWWA: [2, 30], basDebit: 0.25, basDebitPrecision: '95 %', source: SRC_T10_PETIT,
+      perte: [[0, 0], [13, 2], [18.1, 4], [23, 6], [27, 8], [30, 10]] }),
+    c(T10, { diametrePo: '1', diametreMm: 25, plageNormale: [1, 50], plageAWWA: [3, 50], basDebit: 0.375, basDebitPrecision: '95 %', source: SRC_T10_PETIT,
+      perte: [[0, 0], [24, 2], [34, 4], [42, 6], [50, 8]] }),
+    c(T10, { diametrePo: '1 1/2', diametreMm: 40, plageNormale: [2, 100], plageAWWA: [5, 100], basDebit: 0.75, basDebitPrecision: '95 %', source: SRC_T10_INTER,
+      perte: [[0, 0], [10, 0], [44, 2], [64, 4], [80, 6], [92, 8], [100, 9.9]] }),
+    c(T10, { diametrePo: '2', diametreMm: 50, plageNormale: [2.5, 160], plageAWWA: [8, 160], basDebit: 1, basDebitPrecision: '95 %', source: SRC_T10_INTER,
+      perte: [[0, 0], [10, 0.1], [70, 2], [105, 4], [125, 6], [145, 8], [160, 9.8]] }),
+
+    // Sensus iPERL — plage normale ±1,5 % ; bas débit ±3 % ; eau 0,55 à 26,7 °C.
+    c(IPERL, { diametrePo: '5/8', diametreMm: 15, plageNormale: [0.18, 25], basDebit: 0.11, basDebitPrecision: '±3 %', pressionMaxPsi: 200, source: SRC_IPERL,
+      perte: [[0, 0], [5, 0.9], [10, 2.2], [15, 3.9], [20, 6.0], [25, 8.8]] }),
+    c(IPERL, { diametrePo: '3/4', diametreMm: 20, plageNormale: [0.18, 35], basDebit: 0.11, basDebitPrecision: '±3 %', pressionMaxPsi: 200, source: SRC_IPERL,
+      perte: [[0, 0], [5, 0.45], [10, 1.05], [15, 1.9], [20, 2.9], [25, 4.1], [30, 5.6], [35, 7.3]] }),
+    c(IPERL, { diametrePo: '1', diametreMm: 25, plageNormale: [0.4, 55], basDebit: 0.3, basDebitPrecision: '±3 %', pressionMaxPsi: 175, source: SRC_IPERL,
+      perte: [[0, 0.45], [10, 0.7], [20, 1.5], [30, 2.7], [40, 4.3], [50, 6.4], [55, 7.7]] }),
+
+    // Neptune MACH 10 C&I — bas débit étendu ±3 % ; plage normale ±1,5 %. Aucune perte de pression dans la source.
+    c(MACH10, { diametrePo: '3', diametreMm: 75, plageNormale: [0.75, 500], basDebit: 0.5, basDebitPrecision: '±3 %', protectionIncendie: 420, source: SRC_MACH10, perte: null }),
+    c(MACH10, { diametrePo: '4', diametreMm: 100, plageNormale: [1.5, 1250], basDebit: 0.75, basDebitPrecision: '±3 %', protectionIncendie: 1100, source: SRC_MACH10, perte: null }),
+    c(MACH10, { diametrePo: '6', diametreMm: 150, plageNormale: [2, 2000], basDebit: 1, basDebitPrecision: '±3 %', protectionIncendie: 1800, source: SRC_MACH10, perte: null }),
+    c(MACH10, { diametrePo: '8', diametreMm: 200, plageNormale: [6, 4000], basDebit: 4, basDebitPrecision: '±3 %', protectionIncendie: 4000, source: SRC_MACH10, perte: null }),
+    c(MACH10, { diametrePo: '10', diametreMm: 250, plageNormale: [10, 6500], basDebit: 6, basDebitPrecision: '±3 %', protectionIncendie: 6500, source: SRC_MACH10, perte: null }),
+    c(MACH10, { diametrePo: '12', diametreMm: 300, plageNormale: [12, 8000], basDebit: 8, basDebitPrecision: '±3 %', protectionIncendie: 8000, source: SRC_MACH10, perte: null })
+  ];
+
+  // Diamètres de préparation de tuyauterie prévus à l'annexe B (croquis 001, 002, 003).
+  var DIAMETRES_ANNEXE_B = [20, 25, 40, 50, 75, 100, 150, 200, 250, 300];
+
+  var api = { COMPTEURS: COMPTEURS, DIAMETRES_ANNEXE_B: DIAMETRES_ANNEXE_B, KPA_PAR_PSI: 6.894757 };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.CompteursDB = api;
+})(this);
+</script>
+  <script>
+/*
+ * Calculs des modules 1 (admissibilité, art. 2.1) et 2 (demande de pointe, annexes H et I).
+ * Fonctions pures, sans accès au DOM : testées par tests/calculs.test.js.
+ */
+(function (root) {
+  'use strict';
+
+  var RCG = (typeof module !== 'undefined' && module.exports) ? require('./reglement.js') : root.RCG;
+  var I = RCG.ANNEXE_I;
+
+  function nombre(v) {
+    var n = typeof v === 'string' ? parseFloat(v.replace(',', '.')) : Number(v);
+    return isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function contribution(item, valeur) {
+    var v = nombre(valeur);
+    return item.saisie === 'debit' ? v : v * item.unite;
+  }
+
+  // Q12 et Q13 d'un établissement (annexe I, étapes 2 à 4) et déclencheurs du cas 1.
+  function calculerEtablissement(etab) {
+    var saisies = etab.quantites || {};
+    var q12 = 0, q13 = 0, raisonsCas1 = [];
+    RCG.TABLEAU_12.forEach(function (item) {
+      var c = contribution(item, saisies[item.id]);
+      q12 += c;
+      if (item.declencheCas1 && nombre(saisies[item.id]) > 0) raisonsCas1.push(item.libelle);
+    });
+    RCG.TABLEAU_13.forEach(function (item) {
+      q13 += contribution(item, saisies[item.id]);
+    });
+    if (etab.usageCas1) raisonsCas1.unshift('Usage : ' + etab.usageCas1);
+    return { q12: q12, q13: q13, cas1: raisonsCas1.length > 0, raisonsCas1: raisonsCas1 };
+  }
+
+  function dansPlage(q, p) {
+    var okMin = p.minInclus ? q >= p.min : q > p.min;
+    var okMax = p.max === Infinity || (p.maxInclus ? q <= p.max : q < p.max);
+    return okMin && okMax;
+  }
+
+  // Annexe I, étape 5 : demande de pointe pondérée.
+  function q12Pondere(q12, cas) {
+    var notes = [];
+    if (!(q12 > 0)) {
+      notes.push('Q12 = 0 : plage non couverte par l\'annexe I (les plages commencent à « 0 < Q12 ») ; Q12P = 0 retenu — à confirmer.');
+      return { valeur: 0, plage: null, formule: null, notes: notes, aConfirmer: true };
+    }
+    var plages = cas === 1 ? I.cas1 : I.cas2;
+    var p = plages.filter(function (x) { return dansPlage(q12, x); })[0];
+    var v = p.f(q12);
+    var aConfirmer = false;
+    if (v < 0) {
+      notes.push('La formule donne une valeur négative (' + v.toFixed(4) + ') pour un Q12 très faible ; Q12P = 0 retenu — à confirmer.');
+      v = 0;
+      aConfirmer = true;
+    }
+    return { valeur: v, plage: p.plage, formule: p.formule, notes: notes, aConfirmer: aConfirmer };
+  }
+
+  // Comparaison au seuil de l'annexe I : 10 gal US/min, imprimé 2,3 m³/h (10 × 0,227 = 2,27).
+  function verdictExemption(qpus) {
+    var qpm = qpus * I.conversionM3hParUSGPM;
+    if (qpus <= I.seuilUSGPM) return { statut: 'possible', qpm: qpm };
+    if (qpm <= I.seuilImprimeM3h) return { statut: 'zone_grise', qpm: qpm };
+    return { statut: 'non', qpm: qpm };
+  }
+
+  // Modules 2 : somme pour l'ensemble des établissements de l'immeuble.
+  function calculerDemandePointe(etablissements) {
+    var details = (etablissements || []).map(function (e) {
+      var r = calculerEtablissement(e);
+      r.id = e.id;
+      r.nom = e.nom;
+      return r;
+    });
+    var q12 = 0, q13 = 0, raisonsCas1 = [];
+    details.forEach(function (d) {
+      q12 += d.q12;
+      q13 += d.q13;
+      if (d.cas1) raisonsCas1.push({ etablissement: d.nom, raisons: d.raisonsCas1 });
+    });
+    var cas = raisonsCas1.length > 0 ? 1 : 2;
+    var casCas1Partiel = cas === 1 && raisonsCas1.length < details.length;
+    var pond = q12Pondere(q12, cas);
+    var qpus = q13 + pond.valeur;
+    var verdict = verdictExemption(qpus);
+    return {
+      etablissements: details,
+      q12: q12,
+      q13: q13,
+      cas: cas,
+      raisonsCas1: raisonsCas1,
+      // Décision utilisateur (immeuble mixte) : cas 1 pour tout l'immeuble si un établissement le déclenche.
+      casMixte: casCas1Partiel,
+      q12p: pond,
+      qpus: qpus,
+      qpm: verdict.qpm,
+      exemption: verdict.statut,
+      inventaireVide: q12 === 0 && q13 === 0
+    };
+  }
+
+  // Module 1 : admissibilité (art. 2.1). Réponses : 'oui' | 'non' | 'inconnu'.
+  function evaluerAdmissibilite(rep, demande) {
+    rep = rep || {};
+    var motifs = [];
+    var res = { statut: null, motifs: motifs, exemption: null };
+
+    if (rep.usage === 'residentiel') {
+      res.statut = 'non_assujetti';
+      motifs.push({ texte: 'Immeuble utilisé uniquement à des fins résidentielles : aucun des cas 1° à 3° ne s\'applique.', ref: 'art2_1_al1' });
+      return res;
+    }
+    if (rep.aucunBranchement === 'oui') {
+      res.statut = 'non_requis';
+      motifs.push({ texte: 'Aucun aménagement ou bâtiment n\'est relié à un branchement d\'eau : compteur non requis.', ref: 'art2_1_al2' });
+      return res;
+    }
+
+    var criteres = [
+      { cle: 'critere1', texte: '1° immeuble non résidentiel au rôle (classes 5 à 10, art. 244.32 LFM, ou art. 244.36, 244.51, 244.52)' },
+      { cle: 'critere2', texte: '2° immeuble visé par l\'art. 204 LFM, par. 1 à 9 ou 11 à 19' },
+      { cle: 'critere3', texte: '3° usage non résidentiel (en tout ou en partie), pas encore porté au rôle' }
+    ];
+    var oui = criteres.filter(function (c) { return rep[c.cle] === 'oui'; });
+    var inconnus = criteres.filter(function (c) { return rep[c.cle] !== 'oui' && rep[c.cle] !== 'non'; });
+
+    if (oui.length) {
+      res.statut = 'assujetti';
+      oui.forEach(function (c) { motifs.push({ texte: 'Critère rempli : ' + c.texte + '.', ref: 'art2_1_al1' }); });
+    } else if (inconnus.length) {
+      res.statut = 'a_confirmer';
+      inconnus.forEach(function (c) { motifs.push({ texte: 'Réponse manquante : ' + c.texte + '.', ref: 'art2_1_al1' }); });
+      motifs.push({ texte: 'Les articles de la Loi sur la fiscalité municipale ne sont pas reproduits dans le règlement : vérifier au rôle d\'évaluation.', ref: 'art2_1_al1' });
+    } else {
+      res.statut = 'non_assujetti';
+      motifs.push({ texte: 'Aucun des cas 1° à 3° ne s\'applique.', ref: 'art2_1_al1' });
+    }
+
+    if (res.statut !== 'non_assujetti' && rep.partieResidentielle === 'oui') {
+      var ex = { statut: null, pieces: [] };
+      if (!demande || demande.inventaireVide) {
+        ex.statut = 'inventaire_requis';
+      } else {
+        ex.statut = demande.exemption;
+        ex.qpm = demande.qpm;
+        ex.qpus = demande.qpus;
+      }
+      if (ex.statut === 'possible' || ex.statut === 'zone_grise') {
+        ex.pieces = [
+          { texte: 'Demande écrite d\'exemption adressée à l\'autorité compétente', ref: 'art2_1_al3' },
+          { texte: 'Annexe D — Questionnaire : fiche d\'information, dûment complétée', ref: 'annD' },
+          { texte: 'Annexe H — Inventaire, dûment complété (une fiche par point d\'installation)', ref: 'annH_12' }
+        ];
+      }
+      res.exemption = ex;
+    }
+    return res;
+  }
+
+  // ---------- module 3 : sélection du compteur (art. 9 al. 3) ----------
+  var DB = (typeof module !== 'undefined' && module.exports) ? require('./compteurs.js') : root.CompteursDB;
+
+  // Perte de pression (psi) au débit q, par interpolation linéaire des points lus sur la fiche.
+  function perteA(compteur, q) {
+    var pts = compteur.perte;
+    if (!pts) return { statut: 'inconnue' };
+    var dernier = pts[pts.length - 1];
+    if (q > dernier[0]) return { statut: 'hors_courbe', maxDebit: dernier[0] };
+    for (var i = 1; i < pts.length; i++) {
+      if (q <= pts[i][0]) {
+        var a = pts[i - 1], b = pts[i];
+        var psi = a[1] + (b[1] - a[1]) * (q - a[0]) / (b[0] - a[0]);
+        return { statut: 'calculee', psi: psi, kpa: psi * DB.KPA_PAR_PSI };
+      }
+    }
+    return { statut: 'calculee', psi: pts[0][1], kpa: pts[0][1] * DB.KPA_PAR_PSI };
+  }
+
+  // Critères de l'art. 9 al. 3 pour un compteur, à la demande de pointe q (USGPM).
+  function evaluerCompteur(compteur, q, pertePermiseKpa) {
+    var notes = [];
+    var p = compteur.plageNormale;
+    var gamme = q > p[1] ? 'depasse' : (q < p[0] ? 'sous' : 'ok');
+    if (gamme === 'sous') notes.push('Demande de pointe sous la plage normale du compteur.');
+
+    var perte = perteA(compteur, q);
+    if (perte.statut === 'calculee') {
+      if (pertePermiseKpa == null) perte.verdict = 'a_evaluer';
+      else perte.verdict = perte.kpa <= pertePermiseKpa ? 'ok' : 'depasse';
+    }
+
+    if (DB.DIAMETRES_ANNEXE_B.indexOf(compteur.diametreMm) === -1) {
+      notes.push('Diamètre ' + compteur.diametreMm + ' mm non prévu à l\'annexe B (préparation de tuyauterie de 20 mm minimum).');
+    }
+    if (compteur.diametreMm === 75) notes.push('75 mm (3 po) : prévu à l\'annexe B, mais les annexes A et C utilisent 80 mm.');
+    if (compteur.technologie === 'electromagnetique' && compteur.diametreMm >= 50) {
+      notes.push('Électromagnétique ≥ 50 mm : exigences d\'alimentation 120 V de l\'art. 12 si le compteur en est muni.');
+    }
+
+    var statut;
+    if (gamme === 'depasse' || perte.statut === 'hors_courbe' || perte.verdict === 'depasse') statut = 'ecarte';
+    else if (gamme === 'ok' && perte.verdict === 'ok') statut = 'conforme';
+    else statut = 'sous_reserve';
+
+    return { compteur: compteur, gamme: gamme, perte: perte, notes: notes, statut: statut };
+  }
+
+  // Évalue la base et propose, par technologie, le plus petit diamètre non écarté
+  // parmi les diamètres de préparation prévus à l'annexe B.
+  function selectionnerCompteurs(q, pertePermiseKpa, technologie) {
+    var liste = DB.COMPTEURS
+      .filter(function (c) { return !technologie || c.technologie === technologie; })
+      .map(function (c) { return evaluerCompteur(c, q, pertePermiseKpa); })
+      .sort(function (a, b) { return a.compteur.diametreMm - b.compteur.diametreMm; });
+    var propositions = {};
+    liste.forEach(function (r) {
+      var t = r.compteur.technologie;
+      var prevuAnnexeB = DB.DIAMETRES_ANNEXE_B.indexOf(r.compteur.diametreMm) !== -1;
+      if (!propositions[t] && r.statut !== 'ecarte' && prevuAnnexeB) {
+        propositions[t] = r;
+        r.propose = true;
+      }
+    });
+    return { evaluations: liste, propositions: propositions };
+  }
+
+  var api = {
+    perteA: perteA,
+    evaluerCompteur: evaluerCompteur,
+    selectionnerCompteurs: selectionnerCompteurs,
+    nombre: nombre,
+    contribution: contribution,
+    calculerEtablissement: calculerEtablissement,
+    q12Pondere: q12Pondere,
+    verdictExemption: verdictExemption,
+    calculerDemandePointe: calculerDemandePointe,
+    evaluerAdmissibilite: evaluerAdmissibilite
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.Calculs = api;
+})(this);
+</script>
+  <script>
+/*
+ * Jeu de données d'exemple — immeuble mixte FICTIF (voir docs/jeu_exemple.md pour les résultats attendus).
+ * Les branchements serviront aux modules 4 à 7.
+ */
+(function (root) {
+  'use strict';
+
+  var EXEMPLE = {
+    projet: {
+      nom: 'Exemple — immeuble mixte fictif',
+      adresse: '1234, rue de l\'Exemple (fictive)',
+      arrondissement: 'LaSalle'
+    },
+    admissibilite: {
+      usage: 'commerciale',
+      critere1: 'oui',
+      critere2: 'non',
+      critere3: 'non',
+      aucunBranchement: 'non',
+      partieResidentielle: 'oui',
+      nbLogements: 6
+    },
+    etablissements: [
+      {
+        id: 'e1',
+        nom: 'Café du coin',
+        usageCas1: '',
+        quantites: { wc_reservoir: 1, lavabo: 1, evier_com: 1, lv_com: 1, frigo_eau: 2 }
+      },
+      {
+        id: 'e2',
+        nom: 'Salon de coiffure',
+        usageCas1: '',
+        quantites: { wc_reservoir: 1, lavabo: 1, evier_com: 2, laveuse: 1 }
+      }
+    ],
+    // Module 3 — pressions FICTIVES saisies par l'usager (le règlement ne fixe aucune valeur).
+    selection: {
+      sourceDemande: 'module2',
+      debitManuel: '',
+      pressionDisponibleKpa: 380,
+      pressionRequiseKpa: 350,
+      technologie: ''
+    },
+    branchements: [
+      { id: 'B1', type: 'Potable', diametreMm: 50, materiau: 'Cuivre' },
+      { id: 'B2', type: 'Combiné', diametreMm: 150, materiau: 'Fonte' }
+    ]
+  };
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = EXEMPLE;
+  else root.EXEMPLE = EXEMPLE;
+})(this);
+</script>
+  <script>
+/* Interface — modules 1 et 2. Dépend de RCG (reglement.js), Calculs (calculs.js), EXEMPLE (exemple.js). */
+(function () {
+  'use strict';
+
+  var CLE_STOCKAGE = 'rcg07031.projet.v1';
+  var I = RCG.ANNEXE_I;
+
+  var MODULES = [
+    { id: 'm1', titre: '1. Admissibilité', actif: true },
+    { id: 'm2', titre: '2. Demande de pointe', actif: true },
+    { id: 'm3', titre: '3. Sélection du compteur', actif: true },
+    { id: 'm4', titre: '4. Nombre et emplacement', actif: false },
+    { id: 'm5', titre: '5. Chambre de compteur', actif: false },
+    { id: 'm6', titre: '6. Préparation et installation', actif: false },
+    { id: 'm7', titre: '7. Consommation réputée', actif: false }
+  ];
+
+  function projetVide() {
+    return {
+      projet: { nom: '', adresse: '', arrondissement: '' },
+      admissibilite: { usage: '', critere1: '', critere2: '', critere3: '', aucunBranchement: '', partieResidentielle: '', nbLogements: '' },
+      etablissements: [{ id: nouvelId(), nom: 'Établissement 1', usageCas1: '', quantites: {} }],
+      selection: selectionVide()
+    };
+  }
+
+  function selectionVide() {
+    return { sourceDemande: 'module2', debitManuel: '', pressionDisponibleKpa: '', pressionRequiseKpa: '', technologie: '' };
+  }
+
+  function nouvelId() { return 'e' + Math.random().toString(36).slice(2, 9); }
+  function copie(o) { return JSON.parse(JSON.stringify(o)); }
+
+  var etat = charger() || copie(EXEMPLE);
+  if (!etat.selection) etat.selection = selectionVide();
+  var ongletActif = 'm1';
+
+  function charger() {
+    try { var s = localStorage.getItem(CLE_STOCKAGE); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+  }
+  function sauver() {
+    try { localStorage.setItem(CLE_STOCKAGE, JSON.stringify(etat)); } catch (e) { /* stockage indisponible */ }
+  }
+
+  // ---------- utilitaires d'affichage ----------
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmt(n, d) {
+    return Number(n).toLocaleString('fr-CA', { minimumFractionDigits: 0, maximumFractionDigits: d == null ? 2 : d });
+  }
+  // Citation normative affichée en infobulle (exigence : chaque résultat cite son article/annexe).
+  function ref(cle) {
+    var r = RCG.REFS[cle];
+    return '<span class="ref" tabindex="0" data-tip="' + esc('RCG 07-031 — ' + r.court + ' : ' + r.texte) + '">' + esc(r.court) + '</span>';
+  }
+  function aConfirmer(texte) {
+    return '<span class="badge badge-warn" title="' + esc(texte) + '">à confirmer</span>';
+  }
+  function get(chemin) {
+    return chemin.split('.').reduce(function (o, k) { return o == null ? undefined : o[k]; }, etat);
+  }
+  function set(chemin, v) {
+    var ks = chemin.split('.'), o = etat;
+    for (var i = 0; i < ks.length - 1; i++) o = o[ks[i]] = o[ks[i]] || {};
+    o[ks[ks.length - 1]] = v;
+  }
+
+  // ---------- squelette ----------
+  function rendreNav() {
+    document.getElementById('nav').innerHTML = MODULES.map(function (m) {
+      return '<button class="onglet' + (m.id === ongletActif ? ' actif' : '') + '" data-onglet="' + m.id + '"' +
+        (m.actif ? '' : ' aria-disabled="true"') + '>' + esc(m.titre) + (m.actif ? '' : ' <small>à venir</small>') + '</button>';
+    }).join('');
+  }
+
+  function rendre() {
+    rendreNav();
+    var m = MODULES.filter(function (x) { return x.id === ongletActif; })[0];
+    var main = document.getElementById('contenu');
+    if (m.id === 'm1') main.innerHTML = vueModule1();
+    else if (m.id === 'm2') main.innerHTML = vueModule2();
+    else if (m.id === 'm3') main.innerHTML = vueModule3();
+    else main.innerHTML = '<section class="carte"><h2>' + esc(m.titre) + '</h2><p>Module à venir, dans l\'ordre de la spécification (1 → 7).</p>' +
+      (m.attente ? '<p>' + aConfirmer(m.attente) + ' ' + esc(m.attente) + '. ' + ref('art9_al3') + '</p>' : '') + '</section>';
+    majResultats();
+  }
+
+  // ---------- module 1 ----------
+  function radio(chemin, libelle, refCle) {
+    var v = get(chemin) || '';
+    var opts = [['oui', 'Oui'], ['non', 'Non'], ['inconnu', 'Inconnu']];
+    return '<fieldset class="tri"><legend>' + libelle + ' ' + ref(refCle) + '</legend>' + opts.map(function (o) {
+      return '<label><input type="radio" name="' + chemin + '" data-champ="' + chemin + '" value="' + o[0] + '"' + (v === o[0] ? ' checked' : '') + '> ' + o[1] + '</label>';
+    }).join('') + '</fieldset>';
+  }
+
+  function vueModule1() {
+    var a = etat.admissibilite;
+    var usages = [['', '— choisir —'], ['industrielle', 'Industrielle'], ['commerciale', 'Commerciale'], ['institutionnelle', 'Institutionnelle'], ['residentiel', 'Résidentiel uniquement']];
+    return '' +
+      '<section class="carte"><h2>Projet</h2><div class="grille">' +
+      champTexte('projet.nom', 'Nom du projet') + champTexte('projet.adresse', 'Adresse') + champTexte('projet.arrondissement', 'Arrondissement / Ville') +
+      '</div></section>' +
+      '<div class="colonnes"><div>' +
+      '<section class="carte"><h2>Usages du bâtiment ' + ref('annD_13') + '</h2>' +
+      '<label class="champ">Vocation principale<select data-champ="admissibilite.usage">' + usages.map(function (u) {
+        return '<option value="' + u[0] + '"' + (a.usage === u[0] ? ' selected' : '') + '>' + u[1] + '</option>';
+      }).join('') + '</select></label>' +
+      radio('admissibilite.partieResidentielle', 'Le bâtiment comporte une partie résidentielle', 'art2_1_al3') +
+      '<label class="champ">Nombre d\'unités de logement<input type="number" min="0" step="1" data-champ="admissibilite.nbLogements" value="' + esc(a.nbLogements) + '"></label>' +
+      '</section>' +
+      '<section class="carte"><h2>Critères d\'assujettissement</h2>' +
+      '<p class="aide">Les articles de la Loi sur la fiscalité municipale ne sont pas reproduits dans le règlement : réponses déclaratives, à vérifier au rôle d\'évaluation.</p>' +
+      radio('admissibilite.critere1', '1° Porté au rôle comme immeuble non résidentiel, classes 5 à 10 (art. 244.32 LFM) ou art. 244.36, 244.51, 244.52', 'art2_1_al1') +
+      radio('admissibilite.critere2', '2° Visé par l\'art. 204 LFM, par. 1 à 9 ou 11 à 19', 'art2_1_al1') +
+      radio('admissibilite.critere3', '3° Usage non résidentiel (en tout ou en partie), pas encore porté au rôle', 'art2_1_al1') +
+      radio('admissibilite.aucunBranchement', 'Aucun aménagement ni bâtiment relié à un branchement d\'eau', 'art2_1_al2') +
+      '</section></div>' +
+      '<div><section class="carte resultat" id="m1-resultat" aria-live="polite"></section></div></div>';
+  }
+
+  function champTexte(chemin, libelle) {
+    return '<label class="champ">' + esc(libelle) + '<input type="text" data-champ="' + chemin + '" value="' + esc(get(chemin)) + '"></label>';
+  }
+
+  var STATUTS = {
+    assujetti: ['Assujetti', 'err', 'Un ou des compteurs doivent être installés.'],
+    non_assujetti: ['Non assujetti', 'ok', 'Aucun compteur exigé par le règlement.'],
+    non_requis: ['Compteur non requis', 'ok', 'Aucun bâtiment ni aménagement relié.'],
+    a_confirmer: ['À confirmer', 'warn', 'Réponses manquantes.']
+  };
+
+  function majModule1(demande) {
+    var el = document.getElementById('m1-resultat');
+    if (!el) return;
+    var r = Calculs.evaluerAdmissibilite(etat.admissibilite, demande);
+    var s = STATUTS[r.statut];
+    var h = '<h2>Résultat</h2><div class="statut statut-' + s[1] + '"><strong>' + s[0] + '</strong><span>' + s[2] + '</span></div>' +
+      '<ul class="motifs">' + r.motifs.map(function (m) { return '<li>' + esc(m.texte) + ' ' + ref(m.ref) + '</li>'; }).join('') + '</ul>';
+    if (r.exemption) h += vueExemption(r.exemption);
+    el.innerHTML = h;
+  }
+
+  function vueExemption(ex) {
+    var h = '<h3>Calculateur d\'exemption — immeuble mixte ' + ref('art2_1_al3') + '</h3>';
+    if (ex.statut === 'inventaire_requis') {
+      return h + '<p>Remplir l\'inventaire des établissements pour évaluer l\'exemption.</p><button class="btn" data-onglet="m2">→ Module 2 : demande de pointe</button>';
+    }
+    var lib = {
+      possible: ['Exemption possible', 'ok', 'QPM ≤ 2,27 m³/h (10 gal US/min × 0,227).'],
+      zone_grise: ['Zone grise — à confirmer', 'warn', 'QPM entre 2,27 et 2,3 m³/h : le règlement imprime 2,3 m³/h mais sa propre conversion de 10 gal US/min donne 2,27 m³/h. Confirmer avec l\'autorité compétente.'],
+      non: ['Exemption non admissible', 'err', 'QPM > 2,3 m³/h.']
+    }[ex.statut];
+    h += '<div class="statut statut-' + lib[1] + '"><strong>' + lib[0] + '</strong><span>QPM = ' + fmt(ex.qpm, 3) + ' m³/h ' + ref('annI_qpm') + ' — seuil 2,3 m³/h (10 gal US) ' + ref('annI_seuil') + '</span><span>' + esc(lib[2]) + '</span></div>';
+    h += jauge(ex.qpm);
+    if (ex.pieces.length) {
+      h += '<h4>Pièces du dossier d\'exemption</h4><ol class="pieces">' + ex.pieces.map(function (p) { return '<li>' + esc(p.texte) + ' ' + ref(p.ref) + '</li>'; }).join('') + '</ol>' +
+        '<p class="aide">L\'autorisation est accordée par l\'autorité compétente sur demande écrite.</p>';
+    }
+    return h + '<button class="btn" data-onglet="m2">Voir le détail du calcul (module 2)</button>';
+  }
+
+  // Jauge QPM vs seuil (zone grise 2,27–2,3).
+  function jauge(qpm) {
+    var max = Math.max(4.6, qpm * 1.15);
+    function pct(v) { return Math.min(100, v / max * 100).toFixed(2) + '%'; }
+    var bas = I.seuilUSGPM * I.conversionM3hParUSGPM;
+    return '<div class="jauge" role="img" aria-label="QPM ' + fmt(qpm, 3) + ' m³/h comparé au seuil de 2,3 m³/h">' +
+      '<div class="jauge-zone ok" style="width:' + pct(bas) + '"></div>' +
+      '<div class="jauge-zone warn" style="left:' + pct(bas) + ';width:calc(' + pct(I.seuilImprimeM3h) + ' - ' + pct(bas) + ')"></div>' +
+      '<div class="jauge-zone err" style="left:' + pct(I.seuilImprimeM3h) + ';right:0"></div>' +
+      '<div class="jauge-curseur" style="left:' + pct(qpm) + '"><span>' + fmt(qpm, 3) + '</span></div>' +
+      '</div><div class="jauge-legende"><span>0</span><span class="jauge-seuil" style="left:' + pct(I.seuilImprimeM3h) + '">seuil 2,27 | 2,3 m³/h</span><span>' + fmt(max, 1) + ' m³/h</span></div>';
+  }
+
+  // ---------- module 2 ----------
+  function vueModule2() {
+    var h = '<section class="carte"><h2>Inventaire des appareils par établissement ' + ref('annH_12') + ' ' + ref('annH_13') + '</h2>' +
+      '<p class="aide">Inventorier les appareils de tous les établissements (usage autre que résidentiel ' + ref('art1_etab') + ') de l\'immeuble ' + ref('art2_1_al3') + '. ' +
+      'Unités d\'alimentation en gallons US par minute (USGPM) ' + ref('annH_conv') + '.</p></section>';
+    h += etat.etablissements.map(vueEtablissement).join('');
+    h += '<div class="actions"><button class="btn" data-action="ajouter-etab">+ Ajouter un établissement</button></div>';
+    h += '<section class="carte resultat" id="m2-resultat" aria-live="polite"></section>';
+    return h;
+  }
+
+  function vueEtablissement(e) {
+    var usages = [''].concat(I.usagesCas1);
+    return '<section class="carte etab" data-etab="' + e.id + '">' +
+      '<div class="etab-tete"><label class="champ">Établissement<input type="text" data-etab-champ="nom" value="' + esc(e.nom) + '"></label>' +
+      '<label class="champ">Usage visé au cas 1 ' + ref('annI_cas') + '<select data-etab-champ="usageCas1">' + usages.map(function (u) {
+        return '<option value="' + esc(u) + '"' + (e.usageCas1 === u ? ' selected' : '') + '>' + (u ? esc(u) : 'Aucun') + '</option>';
+      }).join('') + '</select></label>' +
+      '<label class="champ">Rechercher un appareil<input type="search" data-filtre placeholder="ex. lavabo"></label>' +
+      (etat.etablissements.length > 1 ? '<button class="btn btn-sec" data-action="retirer-etab">Retirer</button>' : '') + '</div>' +
+      tableAppareils(e, RCG.TABLEAU_12, 'Tableau 1.2 — appareils courants', 'annH_12') +
+      tableAppareils(e, RCG.TABLEAU_13, 'Tableau 1.3 — autres appareils', 'annH_13') +
+      '<p class="sous-total" id="st-' + e.id + '"></p></section>';
+  }
+
+  function tableAppareils(e, items, titre, refCle) {
+    var groupes = [], parGroupe = {};
+    items.forEach(function (it) {
+      var g = it.groupe || '';
+      if (!parGroupe[g]) { parGroupe[g] = []; groupes.push(g); }
+      parGroupe[g].push(it);
+    });
+    var h = '<h3>' + esc(titre) + ' ' + ref(refCle) + '</h3><table class="inventaire"><thead><tr><th>Appareil</th><th class="num">Quantité</th><th class="num">Unité (USGPM)</th><th class="num">Total (USGPM)</th></tr></thead>';
+    groupes.forEach(function (g) {
+      var lignes = parGroupe[g].map(function (it) { return ligneAppareil(e, it); }).join('');
+      if (!g) { h += '<tbody>' + lignes + '</tbody>'; return; }
+      var saisi = parGroupe[g].some(function (it) { return Calculs.nombre(e.quantites[it.id]) > 0; });
+      h += '<tbody class="groupe' + (saisi ? '' : ' replie') + '" data-groupe><tr class="groupe-tete"><th colspan="4"><button class="lien" data-action="basculer-groupe">' + esc(g) + '</button>' +
+        (parGroupe[g][0].note ? ' <span class="aide">' + esc(parGroupe[g][0].note) + '</span>' : '') + '</th></tr>' + lignes + '</tbody>';
+    });
+    return h + '</table>';
+  }
+
+  function ligneAppareil(e, it) {
+    var v = e.quantites[it.id];
+    var debit = it.saisie === 'debit';
+    return '<tr data-libelle="' + esc(it.libelle.toLowerCase()) + '"><td>' + esc(it.libelle) +
+      (it.quantiteEn ? ' <span class="aide">(quantité : ' + esc(it.quantiteEn) + ')</span>' : '') +
+      (it.note && !it.groupe ? ' <span class="ref-note" tabindex="0" data-tip="' + esc(it.note) + '">?</span>' : '') + '</td>' +
+      '<td class="num"><input type="number" min="0" step="any" inputmode="decimal" aria-label="' + esc(it.libelle) + (debit ? ' — débit USGPM' : ' — quantité') + '" data-item="' + it.id + '" value="' + esc(v == null ? '' : v) + '"' + (debit ? ' placeholder="débit"' : '') + '></td>' +
+      '<td class="num">' + (debit ? '<em>débit saisi</em>' : fmt(it.unite)) + '</td>' +
+      '<td class="num" id="t-' + e.id + '-' + it.id + '">' + fmt(Calculs.contribution(it, v)) + '</td></tr>';
+  }
+
+  function majModule2(d) {
+    d.etablissements.forEach(function (x) {
+      var st = document.getElementById('st-' + x.id);
+      if (st) st.innerHTML = 'Q12 = <strong>' + fmt(x.q12) + '</strong> USGPM ' + ref('annI_q12') + ' · Q13 = <strong>' + fmt(x.q13) + '</strong> USGPM ' + ref('annI_q13') +
+        ' · ' + (x.cas1 ? 'Déclenche le cas 1 : ' + esc(x.raisonsCas1.join(', ')) : 'Cas 2') + ' ' + ref('annI_cas');
+    });
+    var el = document.getElementById('m2-resultat');
+    if (!el) return;
+    var p = d.q12p;
+    var h = '<h2>Demande de pointe de l\'immeuble — méthode de l\'annexe I ' + ref('annI_seuil') + '</h2>' +
+      '<table class="etapes"><tbody>' +
+      etape('Q12 — somme du tableau 1.2', fmt(d.q12) + ' USGPM', 'annI_q12') +
+      etape('Q13 — somme du tableau 1.3', fmt(d.q13) + ' USGPM', 'annI_q13') +
+      etape('Cas retenu', 'Cas ' + d.cas + (d.cas === 1 ? ' — ' + esc(d.raisonsCas1.map(function (r) { return r.etablissement + ' (' + r.raisons.join(', ') + ')'; }).join(' ; ')) : ' — autre type d\'établissement') +
+        (d.casMixte ? ' ' + aConfirmer('Immeuble mixte : cas 1 appliqué à tout l\'immeuble') + ' <span class="aide">Immeuble mixte : cas 1 appliqué à tout l\'immeuble (décision de projet, non précisé par l\'annexe I).</span>' : ''), 'annI_cas') +
+      etape('Plage et formule', p.plage ? esc(p.plage) + ' : <code>' + esc(p.formule) + '</code>' : '—', 'annI_q12p') +
+      etape('Q12P — demande pondérée', fmt(p.valeur, 3) + ' USGPM' + (p.aConfirmer ? ' ' + aConfirmer(p.notes.join(' ')) + ' <span class="aide">' + esc(p.notes.join(' ')) + '</span>' : ''), 'annI_q12p') +
+      etape('QPUS = Q13 + Q12P', fmt(d.qpus, 3) + ' USGPM', 'annI_qpm') +
+      etape('QPM = QPUS × 0,227', '<strong>' + fmt(d.qpm, 3) + ' m³/h</strong>', 'annI_qpm') +
+      '</tbody></table>' + jauge(d.qpm) +
+      '<p class="aide">La demande de pointe est l\'intrant de la sélection du compteur (module 3) ' + ref('art9_al3') + '. La pression théorique de 414 kPa (60 PSI) indiquée à l\'annexe I n\'intervient dans aucune formule.</p>';
+    el.innerHTML = h;
+  }
+
+  function etape(libelle, valeur, refCle) {
+    return '<tr><th scope="row">' + esc(libelle) + '</th><td>' + valeur + '</td><td class="cite">' + ref(refCle) + '</td></tr>';
+  }
+
+  function majResultats() {
+    var d = Calculs.calculerDemandePointe(etat.etablissements);
+    majModule1(d);
+    majModule2(d);
+    majModule3(d);
+    var titre = document.getElementById('titre-projet');
+    if (titre) titre.textContent = etat.projet.nom || 'Projet sans nom';
+  }
+
+  // ---------- module 3 ----------
+  var TECHNOS = [['', 'Toutes'], ['volumetrique', 'Volumétrique'], ['electromagnetique', 'Électromagnétique'], ['ultrasonique', 'Ultrasonique']];
+  var STATUTS_CPT = {
+    conforme: ['Critères remplis', 'ok'],
+    sous_reserve: ['Sous réserve', 'warn'],
+    ecarte: ['Écarté', 'err']
+  };
+
+  function vueModule3() {
+    var s = etat.selection;
+    return '<div class="colonnes"><div>' +
+      '<section class="carte"><h2>Demande de pointe ' + ref('art9_al3') + '</h2>' +
+      '<fieldset class="tri"><legend>Source</legend>' +
+      '<label><input type="radio" name="src" data-champ="selection.sourceDemande" value="module2"' + (s.sourceDemande !== 'manuel' ? ' checked' : '') + '> Module 2 (annexe I)</label>' +
+      '<label><input type="radio" name="src" data-champ="selection.sourceDemande" value="manuel"' + (s.sourceDemande === 'manuel' ? ' checked' : '') + '> Saisie (ex. calcul hydraulique)</label></fieldset>' +
+      '<label class="champ">Débit saisi (USGPM) — utilisé si « Saisie »<input type="number" min="0" step="any" data-champ="selection.debitManuel" value="' + esc(s.debitManuel) + '"></label>' +
+      '<p id="m3-demande" class="sous-total"></p></section>' +
+      '<section class="carte"><h2>Perte de pression admissible</h2>' +
+      '<p class="aide">Le règlement ne fixe aucune valeur : la perte admissible découle des pressions saisies par le concepteur ' + ref('art9_al3') + '.</p>' +
+      '<div class="grille">' +
+      '<label class="champ">Pression disponible au branchement (kPa)<input type="number" min="0" step="any" data-champ="selection.pressionDisponibleKpa" value="' + esc(s.pressionDisponibleKpa) + '"></label>' +
+      '<label class="champ">Pression requise en aval du compteur (kPa)<input type="number" min="0" step="any" data-champ="selection.pressionRequiseKpa" value="' + esc(s.pressionRequiseKpa) + '"></label>' +
+      '</div><p id="m3-permise" class="sous-total"></p></section>' +
+      '<section class="carte"><h2>Technologie</h2><label class="champ">Filtrer<select data-champ="selection.technologie">' +
+      TECHNOS.map(function (t) { return '<option value="' + t[0] + '"' + (s.technologie === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') +
+      '</select></label><p class="aide">Base : fiches Neptune T-10, Sensus iPERL et Neptune MACH 10 fournies par l\'usager (docs/fiches). Pertes de pression lues sur les graphiques des fiches (≈ ±0,2 psi) ; MACH 10 : aucune donnée de perte dans la source.</p></section>' +
+      '</div><div><section class="carte resultat" id="m3-resultat" aria-live="polite"></section></div></div>' +
+      '<section class="carte" id="m3-graphique"></section>' +
+      '<section class="carte" id="m3-tableau"></section>' +
+      '<section class="carte"><h2>Dossier de contestation du dimensionnement ' + ref('art9_al4') + '</h2>' +
+      '<p>Si le compteur exigé par l\'autorité compétente paraît inadéquat pour les besoins en eau de l\'immeuble, la demande de modification s\'appuie sur l\'une des deux options :</p>' +
+      '<ol class="pieces"><li>Annexe D — fiche d\'information ' + ref('annD') + ' <strong>et</strong> annexe H — inventaire (module 2) ' + ref('annH_12') + '</li>' +
+      '<li><strong>ou</strong> calcul hydraulique signé par un ingénieur ' + ref('art9_al4') + '</li></ol>' +
+      '<p class="aide">L\'export des pièces pré-remplies sera ajouté avec la fonction d\'export (étape 6 de la spécification).</p></section>';
+  }
+
+  function demandeSelection(d) {
+    var s = etat.selection;
+    if (s.sourceDemande === 'manuel') return { q: Calculs.nombre(s.debitManuel), origine: 'saisie' };
+    return { q: d.qpus, origine: 'module2' };
+  }
+
+  function pertePermise() {
+    var s = etat.selection;
+    var dispo = Calculs.nombre(s.pressionDisponibleKpa), req = Calculs.nombre(s.pressionRequiseKpa);
+    if (s.pressionDisponibleKpa === '' || s.pressionRequiseKpa === '' || !dispo) return null;
+    return dispo - req;
+  }
+
+  function source(c, quoi) {
+    var page = quoi === 'perte' ? c.source.pagePerte : c.source.pagePlage;
+    var txt = 'Source : ' + c.source.doc + (page ? ', p. ' + page + ' du PDF' : '') + ' — ' + c.source.fichier +
+      (quoi === 'perte' ? '. Valeur lue sur le graphique (≈ ±0,2 psi), interpolée linéairement.' : '');
+    return '<span class="ref ref-src" tabindex="0" data-tip="' + esc(txt) + '">fiche</span>';
+  }
+
+  function nomCpt(c) { return c.fabricant + ' ' + c.modele + ' ' + c.diametrePo + ' po (' + c.diametreMm + ' mm)'; }
+
+  function textePerte(r) {
+    var p = r.perte;
+    if (p.statut === 'inconnue') return 'non disponible dans la source ' + aConfirmer('Perte de pression absente de la source fournie');
+    if (p.statut === 'hors_courbe') return 'hors courbe (courbe jusqu\'à ' + fmt(p.maxDebit) + ' gpm)';
+    return fmt(p.kpa, 1) + ' kPa (' + fmt(p.psi, 2) + ' psi)' + (p.verdict === 'a_evaluer' ? ' — à comparer : pressions non saisies' : '');
+  }
+
+  function majModule3(d) {
+    var el = document.getElementById('m3-resultat');
+    if (!el) return;
+    var dem = demandeSelection(d), q = dem.q, permise = pertePermise();
+    document.getElementById('m3-demande').innerHTML = dem.origine === 'module2'
+      ? 'QPUS = <strong>' + fmt(q, 3) + ' USGPM</strong> (QPM = ' + fmt(d.qpm, 3) + ' m³/h) ' + ref('annI_qpm')
+      : 'Débit saisi : <strong>' + fmt(q, 3) + ' USGPM</strong> (' + fmt(q * I.conversionM3hParUSGPM, 3) + ' m³/h) ' + ref('annH_conv');
+    document.getElementById('m3-permise').innerHTML = permise == null
+      ? 'Saisir les deux pressions pour évaluer le critère de perte de pression.'
+      : 'Perte admissible = <strong>' + fmt(permise, 1) + ' kPa</strong> (' + fmt(permise / CompteursDB.KPA_PAR_PSI, 2) + ' psi)' +
+        (permise <= 0 ? ' ' + aConfirmer('Pression disponible insuffisante') : '');
+
+    if (!(q > 0)) {
+      el.innerHTML = '<h2>Proposition</h2><p>Aucune demande de pointe : remplir l\'inventaire (module 2) ou saisir un débit.</p>';
+      document.getElementById('m3-graphique').innerHTML = '';
+      document.getElementById('m3-tableau').innerHTML = '';
+      return;
+    }
+    var sel = Calculs.selectionnerCompteurs(q, permise, etat.selection.technologie || null);
+    var h = '<h2>Proposition par technologie ' + ref('art9_al3') + '</h2>' +
+      '<p class="aide">L\'outil propose et justifie ; la détermination du type et de la dimension revient à l\'autorité compétente ' + ref('art9_al3') +
+      ', et les compteurs sont fournis par la Ville ' + ref('art2_al2') + '.</p>';
+    var props = TECHNOS.slice(1).map(function (t) { return sel.propositions[t[0]]; }).filter(Boolean);
+    if (!props.length) h += '<div class="statut statut-err"><strong>Aucun compteur de la base ne convient</strong><span>Demande hors des plages ou perte trop élevée pour les compteurs disponibles.</span></div>';
+    props.forEach(function (r) {
+      var c = r.compteur, st = STATUTS_CPT[r.statut];
+      h += '<div class="statut statut-' + st[1] + '"><strong>' + esc(nomCpt(c)) + '</strong>' +
+        '<span>' + esc(c.libelleTechno) + ' · ' + esc(c.norme) + ' · ' + st[0] + '</span>' +
+        '<span>' + (r.gamme === 'ok' ? '✓' : '⚠') + ' Gamme de débit : plage normale ' + fmt(c.plageNormale[0]) + ' à ' + fmt(c.plageNormale[1]) + ' gpm ' + source(c, 'plage') + '</span>' +
+        '<span>' + (r.perte.verdict === 'ok' ? '✓' : '⚠') + ' Perte de pression : ' + textePerte(r) + (r.perte.statut === 'calculee' ? ' ' + source(c, 'perte') : '') + '</span>' +
+        r.notes.map(function (n) { return '<span>⚠ ' + esc(n) + '</span>'; }).join('') + '</div>';
+    });
+    el.innerHTML = h;
+    document.getElementById('m3-graphique').innerHTML = graphiquePertes(sel.evaluations, q, permise);
+    document.getElementById('m3-tableau').innerHTML = tableauCompteurs(sel.evaluations);
+  }
+
+  function tableauCompteurs(evals) {
+    return '<h2>Tous les compteurs de la base</h2><div class="defile"><table class="inventaire"><thead><tr><th>Compteur</th><th>Technologie</th><th class="num">Plage normale (gpm)</th><th class="num">Bas débit (gpm)</th><th>Perte à la demande</th><th>Statut</th></tr></thead><tbody>' +
+      evals.map(function (r) {
+        var c = r.compteur, st = STATUTS_CPT[r.statut];
+        return '<tr' + (r.propose ? ' class="propose"' : '') + '><td>' + esc(nomCpt(c)) + (r.propose ? ' <span class="badge badge-ok">proposé</span>' : '') + '</td><td>' + esc(c.libelleTechno) + '</td>' +
+          '<td class="num">' + fmt(c.plageNormale[0]) + ' – ' + fmt(c.plageNormale[1]) + ' ' + source(c, 'plage') + '</td>' +
+          '<td class="num">' + fmt(c.basDebit, 3) + ' (' + esc(c.basDebitPrecision) + ')</td>' +
+          '<td>' + textePerte(r) + '</td>' +
+          '<td><span class="pastille pastille-' + st[1] + '">' + st[0] + '</span>' + (r.notes.length ? ' <span class="ref-note" tabindex="0" data-tip="' + esc(r.notes.join(' ')) + '">!</span>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  // Courbes de perte de pression (lecture des fiches) avec la demande et la perte admissible.
+  function graphiquePertes(evals, q, permise) {
+    var series = evals.filter(function (r) { return r.compteur.perte && r.compteur.plageNormale[1] >= q * 0.7; }).slice(0, 6);
+    if (!series.length) return '<h2>Courbes de perte de pression</h2><p class="aide">Aucune courbe disponible pour cette demande (MACH 10 : perte non fournie).</p>';
+    var W = 640, H = 300, g = { l: 44, r: 12, t: 12, b: 38 };
+    var xmax = Math.max(q * 1.6, 10);
+    var plusLongue = Math.max.apply(null, series.map(function (r) { var p = r.compteur.perte; return p[p.length - 1][0]; }));
+    xmax = Math.min(xmax, plusLongue);
+    if (xmax < q * 1.1) xmax = q * 1.1;
+    var ymax = 10;
+    function X(v) { return g.l + v / xmax * (W - g.l - g.r); }
+    function Y(v) { return H - g.b - v / ymax * (H - g.t - g.b); }
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="graphique" role="img" aria-label="Courbes de perte de pression en fonction du débit">';
+    for (var y = 0; y <= ymax; y += 2) svg += '<line class="grille-l" x1="' + g.l + '" x2="' + (W - g.r) + '" y1="' + Y(y) + '" y2="' + Y(y) + '"/><text class="axe" x="' + (g.l - 6) + '" y="' + (Y(y) + 4) + '" text-anchor="end">' + y + '</text>';
+    var pas = xmax > 200 ? 50 : xmax > 80 ? 20 : xmax > 30 ? 10 : 5;
+    for (var x = 0; x <= xmax; x += pas) svg += '<line class="grille-l" x1="' + X(x) + '" x2="' + X(x) + '" y1="' + g.t + '" y2="' + (H - g.b) + '"/><text class="axe" x="' + X(x) + '" y="' + (H - g.b + 16) + '" text-anchor="middle">' + x + '</text>';
+    svg += '<text class="axe" x="' + ((W + g.l) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">Débit (gal US/min)</text>';
+    svg += '<text class="axe" transform="translate(12 ' + ((H - g.b) / 2) + ') rotate(-90)" text-anchor="middle">Perte (psi)</text>';
+    svg += '<defs><clipPath id="zone"><rect x="' + g.l + '" y="' + g.t + '" width="' + (W - g.l - g.r) + '" height="' + (H - g.t - g.b) + '"/></clipPath></defs><g clip-path="url(#zone)">';
+    if (permise != null) {
+      var pp = permise / CompteursDB.KPA_PAR_PSI;
+      svg += '<line class="limite" x1="' + g.l + '" x2="' + (W - g.r) + '" y1="' + Y(pp) + '" y2="' + Y(pp) + '"/>';
+    }
+    series.forEach(function (r, i) {
+      var pts = r.compteur.perte.map(function (p) { return X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1); }).join(' ');
+      svg += '<polyline class="courbe c' + i + (r.compteur.technologie === 'electromagnetique' ? ' tirets' : '') + '" points="' + pts + '"/>';
+      if (r.perte.statut === 'calculee') svg += '<circle class="point c' + i + '" cx="' + X(q) + '" cy="' + Y(r.perte.psi) + '" r="4"/>';
+    });
+    svg += '<line class="demande" x1="' + X(q) + '" x2="' + X(q) + '" y1="' + g.t + '" y2="' + (H - g.b) + '"/></g></svg>';
+    var legende = '<ul class="legende">' + series.map(function (r, i) {
+      return '<li><span class="trait c' + i + (r.compteur.technologie === 'electromagnetique' ? ' tirets' : '') + '"></span>' + esc(nomCpt(r.compteur)) + '</li>';
+    }).join('') + '<li><span class="trait demande"></span>Demande ' + fmt(q, 2) + ' gpm</li>' +
+      (permise != null ? '<li><span class="trait limite"></span>Perte admissible ' + fmt(permise / CompteursDB.KPA_PAR_PSI, 2) + ' psi</li>' : '') + '</ul>';
+    return '<h2>Courbes de perte de pression ' + ref('art9_al3') + '</h2>' + svg + legende +
+      '<p class="aide">Courbes reconstituées à partir des points lus sur les graphiques des fiches fabricants (≈ ±0,2 psi) — à confirmer.</p>';
+  }
+
+  // ---------- événements ----------
+  function etabDe(el) {
+    var c = el.closest('[data-etab]');
+    if (!c) return null;
+    var id = c.getAttribute('data-etab');
+    return etat.etablissements.filter(function (e) { return e.id === id; })[0];
+  }
+
+  document.addEventListener('input', function (ev) {
+    var t = ev.target;
+    if (t.hasAttribute('data-champ')) {
+      set(t.getAttribute('data-champ'), t.value);
+    } else if (t.hasAttribute('data-etab-champ')) {
+      etabDe(t)[t.getAttribute('data-etab-champ')] = t.value;
+    } else if (t.hasAttribute('data-item')) {
+      var e = etabDe(t), id = t.getAttribute('data-item');
+      if (t.value === '') delete e.quantites[id]; else e.quantites[id] = t.value;
+      var item = RCG.TABLEAU_12.concat(RCG.TABLEAU_13).filter(function (x) { return x.id === id; })[0];
+      document.getElementById('t-' + e.id + '-' + id).textContent = fmt(Calculs.contribution(item, t.value));
+    } else if (t.hasAttribute('data-filtre')) {
+      filtrer(t);
+      return;
+    } else return;
+    sauver();
+    majResultats();
+  });
+
+  function sansAccent(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function filtrer(champ) {
+    var q = sansAccent(champ.value.trim());
+    var carte = champ.closest('[data-etab]');
+    carte.querySelectorAll('tr[data-libelle]').forEach(function (tr) {
+      tr.hidden = q && sansAccent(tr.getAttribute('data-libelle')).indexOf(q) === -1;
+    });
+    carte.querySelectorAll('[data-groupe]').forEach(function (g) { if (q) g.classList.remove('replie'); });
+  }
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-onglet],[data-action]');
+    if (!t) return;
+    if (t.hasAttribute('data-onglet')) {
+      var m = MODULES.filter(function (x) { return x.id === t.getAttribute('data-onglet'); })[0];
+      ongletActif = m.id;
+      try { localStorage.setItem(CLE_STOCKAGE + '.onglet', m.id); } catch (e) { /* ignoré */ }
+      rendre();
+      window.scrollTo(0, 0);
+      return;
+    }
+    var a = t.getAttribute('data-action');
+    if (a === 'ajouter-etab') {
+      etat.etablissements.push({ id: nouvelId(), nom: 'Établissement ' + (etat.etablissements.length + 1), usageCas1: '', quantites: {} });
+    } else if (a === 'retirer-etab') {
+      var e = etabDe(t);
+      demander('Retirer « ' + e.nom + ' » et son inventaire ?', 'Retirer', function () {
+        etat.etablissements = etat.etablissements.filter(function (x) { return x !== e; });
+      });
+      return;
+    } else if (a === 'basculer-groupe') {
+      t.closest('[data-groupe]').classList.toggle('replie');
+      return;
+    } else if (a === 'exemple') {
+      demander('Remplacer le projet courant par le jeu d\'exemple ?', 'Charger l\'exemple', function () { etat = copie(EXEMPLE); });
+      return;
+    } else if (a === 'nouveau') {
+      demander('Effacer le projet courant ?', 'Effacer', function () { etat = projetVide(); });
+      return;
+    } else if (a === 'exporter') {
+      montrerExport();
+      return;
+    } else if (a === 'copier-export') {
+      var zone = document.getElementById('export-json');
+      var choisir = function () { zone.focus(); zone.select(); };
+      try {
+        navigator.clipboard.writeText(zone.value).then(function () { t.textContent = 'Copié'; }, choisir);
+      } catch (err) { choisir(); }
+      return;
+    } else if (a === 'telecharger-export') {
+      var blob = new Blob([JSON.stringify(etat, null, 2)], { type: 'application/json' });
+      var lien = document.createElement('a');
+      lien.href = URL.createObjectURL(blob);
+      lien.download = (etat.projet.nom || 'projet').replace(/[^\w-]+/g, '_') + '.json';
+      lien.click();
+      URL.revokeObjectURL(lien.href);
+      return;
+    } else if (a === 'confirmer') {
+      var f = actionEnAttente;
+      fermerBandeau();
+      if (f) { f(); sauver(); rendre(); }
+      return;
+    } else if (a === 'fermer-bandeau') {
+      fermerBandeau();
+      return;
+    } else if (a === 'importer') {
+      document.getElementById('fichier-import').click();
+      return;
+    } else return;
+    sauver();
+    rendre();
+  });
+
+  // Bandeau de confirmation et de messages (les dialogues natifs ne sont pas disponibles partout).
+  var actionEnAttente = null;
+  function bandeau(html) {
+    var b = document.getElementById('bandeau');
+    b.innerHTML = html;
+    b.hidden = false;
+    var btn = b.querySelector('button');
+    if (btn) btn.focus();
+  }
+  function demander(message, libelle, action) {
+    actionEnAttente = action;
+    bandeau('<span>' + esc(message) + '</span><button class="btn" data-action="confirmer">' + esc(libelle) + '</button><button class="btn btn-sec" data-action="fermer-bandeau">Annuler</button>');
+  }
+  function informer(message) {
+    actionEnAttente = null;
+    bandeau('<span>' + esc(message) + '</span><button class="btn btn-sec" data-action="fermer-bandeau">Fermer</button>');
+  }
+  function fermerBandeau() {
+    actionEnAttente = null;
+    var b = document.getElementById('bandeau');
+    b.hidden = true;
+    b.innerHTML = '';
+  }
+  function montrerExport() {
+    actionEnAttente = null;
+    bandeau('<div class="export"><label for="export-json">Projet au format JSON — copier ce texte et le conserver dans un fichier .json pour l\'importer plus tard.</label>' +
+      '<textarea id="export-json" rows="6" readonly>' + esc(JSON.stringify(etat, null, 2)) + '</textarea>' +
+      '<div class="export-actions"><button class="btn" data-action="copier-export">Copier</button>' + (location.protocol === 'file:' ? '<button class="btn btn-sec" data-action="telecharger-export">Télécharger</button>' : '') + '<button class="btn btn-sec" data-action="fermer-bandeau">Fermer</button></div></div>');
+  }
+
+  document.getElementById('fichier-import').addEventListener('change', function (ev) {
+    var f = ev.target.files[0];
+    if (!f) return;
+    f.text().then(function (txt) {
+      var o = JSON.parse(txt);
+      if (!o || !o.admissibilite || !Array.isArray(o.etablissements)) throw new Error('format');
+      etat = o;
+      if (!etat.selection) etat.selection = selectionVide();
+      sauver();
+      rendre();
+    }).catch(function () { informer('Fichier de projet invalide : choisir un fichier JSON exporté par cet outil.'); });
+    ev.target.value = '';
+  });
+
+  // Infobulles (survol et focus clavier).
+  var bulle = document.getElementById('infobulle');
+  function montrer(el) {
+    bulle.textContent = el.getAttribute('data-tip');
+    bulle.hidden = false;
+    var r = el.getBoundingClientRect(), b = bulle.getBoundingClientRect();
+    var x = Math.max(8, Math.min(r.left, window.innerWidth - b.width - 8));
+    var y = r.bottom + 6;
+    if (y + b.height > window.innerHeight - 8) y = r.top - b.height - 6;
+    bulle.style.left = x + 'px';
+    bulle.style.top = Math.max(8, y) + 'px';
+  }
+  function cacher() { bulle.hidden = true; }
+  ['mouseover', 'focusin'].forEach(function (type) {
+    document.addEventListener(type, function (ev) {
+      var el = ev.target.closest && ev.target.closest('[data-tip]');
+      if (el) montrer(el);
+    });
+  });
+  ['mouseout', 'focusout'].forEach(function (type) {
+    document.addEventListener(type, function (ev) {
+      if (ev.target.closest && ev.target.closest('[data-tip]')) cacher();
+    });
+  });
+  window.addEventListener('scroll', cacher, { passive: true });
+
+  try {
+    var o = localStorage.getItem(CLE_STOCKAGE + '.onglet');
+    if (o && MODULES.some(function (m) { return m.id === o; })) ongletActif = o;
+  } catch (e) { /* ignoré */ }
+  rendre();
+})();
+</script>

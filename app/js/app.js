@@ -471,24 +471,44 @@
       etat.etablissements.push({ id: nouvelId(), nom: 'Établissement ' + (etat.etablissements.length + 1), usageCas1: '', quantites: {} });
     } else if (a === 'retirer-etab') {
       var e = etabDe(t);
-      if (!confirm('Retirer « ' + e.nom + ' » et son inventaire ?')) return;
-      etat.etablissements = etat.etablissements.filter(function (x) { return x !== e; });
+      demander('Retirer « ' + e.nom + ' » et son inventaire ?', 'Retirer', function () {
+        etat.etablissements = etat.etablissements.filter(function (x) { return x !== e; });
+      });
+      return;
     } else if (a === 'basculer-groupe') {
       t.closest('[data-groupe]').classList.toggle('replie');
       return;
     } else if (a === 'exemple') {
-      if (!confirm('Remplacer le projet courant par le jeu d\'exemple ?')) return;
-      etat = copie(EXEMPLE);
+      demander('Remplacer le projet courant par le jeu d\'exemple ?', 'Charger l\'exemple', function () { etat = copie(EXEMPLE); });
+      return;
     } else if (a === 'nouveau') {
-      if (!confirm('Effacer le projet courant ?')) return;
-      etat = projetVide();
+      demander('Effacer le projet courant ?', 'Effacer', function () { etat = projetVide(); });
+      return;
     } else if (a === 'exporter') {
+      montrerExport();
+      return;
+    } else if (a === 'copier-export') {
+      var zone = document.getElementById('export-json');
+      var choisir = function () { zone.focus(); zone.select(); };
+      try {
+        navigator.clipboard.writeText(zone.value).then(function () { t.textContent = 'Copié'; }, choisir);
+      } catch (err) { choisir(); }
+      return;
+    } else if (a === 'telecharger-export') {
       var blob = new Blob([JSON.stringify(etat, null, 2)], { type: 'application/json' });
       var lien = document.createElement('a');
       lien.href = URL.createObjectURL(blob);
       lien.download = (etat.projet.nom || 'projet').replace(/[^\w-]+/g, '_') + '.json';
       lien.click();
       URL.revokeObjectURL(lien.href);
+      return;
+    } else if (a === 'confirmer') {
+      var f = actionEnAttente;
+      fermerBandeau();
+      if (f) { f(); sauver(); rendre(); }
+      return;
+    } else if (a === 'fermer-bandeau') {
+      fermerBandeau();
       return;
     } else if (a === 'importer') {
       document.getElementById('fichier-import').click();
@@ -497,6 +517,36 @@
     sauver();
     rendre();
   });
+
+  // Bandeau de confirmation et de messages (les dialogues natifs ne sont pas disponibles partout).
+  var actionEnAttente = null;
+  function bandeau(html) {
+    var b = document.getElementById('bandeau');
+    b.innerHTML = html;
+    b.hidden = false;
+    var btn = b.querySelector('button');
+    if (btn) btn.focus();
+  }
+  function demander(message, libelle, action) {
+    actionEnAttente = action;
+    bandeau('<span>' + esc(message) + '</span><button class="btn" data-action="confirmer">' + esc(libelle) + '</button><button class="btn btn-sec" data-action="fermer-bandeau">Annuler</button>');
+  }
+  function informer(message) {
+    actionEnAttente = null;
+    bandeau('<span>' + esc(message) + '</span><button class="btn btn-sec" data-action="fermer-bandeau">Fermer</button>');
+  }
+  function fermerBandeau() {
+    actionEnAttente = null;
+    var b = document.getElementById('bandeau');
+    b.hidden = true;
+    b.innerHTML = '';
+  }
+  function montrerExport() {
+    actionEnAttente = null;
+    bandeau('<div class="export"><label for="export-json">Projet au format JSON — copier ce texte et le conserver dans un fichier .json pour l\'importer plus tard.</label>' +
+      '<textarea id="export-json" rows="6" readonly>' + esc(JSON.stringify(etat, null, 2)) + '</textarea>' +
+      '<div class="export-actions"><button class="btn" data-action="copier-export">Copier</button>' + (location.protocol === 'file:' ? '<button class="btn btn-sec" data-action="telecharger-export">Télécharger</button>' : '') + '<button class="btn btn-sec" data-action="fermer-bandeau">Fermer</button></div></div>');
+  }
 
   document.getElementById('fichier-import').addEventListener('change', function (ev) {
     var f = ev.target.files[0];
@@ -508,7 +558,7 @@
       if (!etat.selection) etat.selection = selectionVide();
       sauver();
       rendre();
-    }).catch(function () { alert('Fichier de projet invalide.'); });
+    }).catch(function () { informer('Fichier de projet invalide : choisir un fichier JSON exporté par cet outil.'); });
     ev.target.value = '';
   });
 
